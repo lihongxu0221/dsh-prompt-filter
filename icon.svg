@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="96" height="96" role="img" aria-label="Prompt filter">
+  <title>Prompt Filter</title>
+  <path d="M3 4.5h18l-7.2 8.2v5.3l-3.6 1.9v-7.2L3 4.5z" fill="none" stroke="#4f8cff" stroke-width="1.6" stroke-linejoin="round" />
+  <path d="M9.4 8.6h5.2" stroke="#4f8cff" stroke-width="1.6" stroke-linecap="round" />
+  <path d="M10.6 11.4h2.8" stroke="#8fb6ff" stroke-width="1.6" stroke-linecap="round" />
+</svg>

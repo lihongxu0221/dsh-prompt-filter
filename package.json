@@ -1,0 +1,36 @@
+{
+  "name": "dsh-prompt-filter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Filter DeepSeek Harness identity out of requests sent to selected models (gemini/claude): system prompt text, tool descriptions, and identical-retry protection.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./locale/*": "./locale/*",
+    "./icon": "./icon.svg"
+  },
+  "files": [
+    "index.js",
+    "lib",
+    "cordis.patch.yml",
+    "locale",
+    "icon.svg",
+    "README.md",
+    "examples",
+    "scripts",
+    "test"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

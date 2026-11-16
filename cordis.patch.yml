@@ -1,0 +1,88 @@
+# dsh-prompt-filter — bundle default composition.
+#
+# This row is inserted into the profile by `plugin_manager install_bundle`.
+# A matching override written in the profile's own cordis.patch.yml replaces
+# this `config` object wholesale, so keep a copy of anything you customize.
+#
+# Every default below is data-driven: delete a strip/replace entry to stop
+# filtering that string, or add your own rule with its own `modelMatch`.
+# `enabled: false` removes every listener, making requests byte-identical to
+# a profile without this bundle.
+- insert:
+    - id: dsh-prompt-filter
+      name: dsh-prompt-filter
+      config:
+        enabled: true
+        # `dryRun` logs and writes the filtered body, then fails the turn with
+        # PROMPT_FILTER_DRY_RUN instead of sending it.
+        dryRun: false
+        # `debug` writes a trace JSON per filtered request under traceDir.
+        debug: true
+        applyToSubagents: true
+        traceDir: ''
+        rules:
+          - id: default-gemini-claude
+            modelMatch:
+              - gemini
+              - claude
+            identityOverride: You are a helpful coding assistant.
+            noRetryOn:
+              - Resource has been exhausted
+              - RATE_LIMIT
+            scope:
+              system: true
+              toolDescriptions: true
+              # Renaming tools also rewrites assistant tool-call names; keep
+              # this off unless the upstream demands neutral tool names.
+              toolNames: false
+              memoryReminders: true
+              # Redact brand tokens inside quoted path strings. Disable to keep
+              # the real cwd/profile paths visible to the model.
+              paths: true
+            stripLines:
+              - pattern: You are an AI agent powered by DeepSeek Harness.
+              - pattern: The runtime context names the DeepSeek Harness implementation checkout.
+                mode: paragraph
+              - pattern: You are interacting with the user through the DeepSeek Harness Web GUI
+                mode: paragraph
+              - pattern: 'Current DeepSeek Harness implementation checkout:'
+              - pattern: 'Current DeepSeek Harness Web GUI URL:'
+              - pattern: The session workspace
+              - pattern: 'also includes these source folders:'
+              - pattern: github.com/ranxianglei/billion-context
+                mode: paragraph
+              - pattern: '^\s*You are a coding agent powered by the .+ model\.\s*$'
+                regex: true
+            replace:
+              - from: 'window.__DSH_BOOT__'
+                to: the app boot payload
+              - from: 'Current DSH file policy:'
+                to: 'Current file policy:'
+              - from: enforced by the DSH file sandbox
+                to: enforced by the file sandbox
+              - from: The DSH file sandbox does not restrict
+                to: The file sandbox does not restrict
+              - from: DSH session cwd
+                to: session cwd
+              - from: dsh web
+                to: the app
+              - from: DeepSeek Harness
+                to: the agent
+              - from: Harness
+                to: agent
+              - from: ACP
+                to: cross-session
+              - from: billion-context
+                to: context-compaction
+              - from: deepseek-tools
+                to: search-tools
+              - from: deepseek-official
+                to: search-official
+              # Final brand sweep for standalone tokens in prose, tool
+              # descriptions, skill catalog, and paths (when scope.paths).
+              - from: '(?<![A-Za-z0-9])DSH(?![A-Za-z0-9])'
+                to: APP
+                regex: true
+              - from: '(?<![A-Za-z0-9])dsh(?![A-Za-z0-9])'
+                to: app
+                regex: true

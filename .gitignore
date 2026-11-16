@@ -1,0 +1,5 @@
+node_modules/
+*.tsbuildinfo
+
+# Internal planning notes (requirement doc, personal paths)
+/Docs/

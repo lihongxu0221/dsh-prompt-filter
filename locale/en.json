@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Prompt Filter",
+    "description": "Strips harness identity from requests sent to selected models, including tool descriptions, and stops identical retries."
+  }
+}
