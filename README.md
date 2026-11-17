@@ -409,6 +409,7 @@ git push --follow-tags
 | LICENSE（MIT，与 `package.json` 一致） | ✅ |
 | README 含功能/安装/两类配置示例/核对方法/兼容版本 | ✅ |
 | awesome-dsh-plugin 条目草稿 `data/plugins/lihongxu0221__dsh-prompt-filter.yml` | ✅ |
+| 界面截图清单 | ✅ `screenshots/README.md`（2 张：主面板配置、侧栏入口） |
 | 首个 Release（含无版本号 `.tgz` 与校验和） | ✅（`v0.3.1` 已发布，附件 `dsh-prompt-filter.tgz` / `dsh-prompt-filter-0.3.1.tgz` / `SHA256SUMS`） |
 | 仓库创建满 1 天后提交 PR | ⬜ 需等待满 1 天（提交 PR 前确认） |
 
