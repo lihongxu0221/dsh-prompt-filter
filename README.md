@@ -404,12 +404,12 @@ git push --follow-tags
 | `package.json` 声明 `dsh.bundle.patch` | ✅ |
 | 官方 `@deepseek-ai/*` 在 `peerDependencies` | ✅（`@deepseek-ai/schemastery`） |
 | 根目录 `cordis.patch.yml` | ✅ |
-| GitHub topic `dsh-plugin`（建议再加 `deepseek-harness`、`dsh`） | ⬜ 需在仓库 Settings 里手动勾选 |
-| About 简介 | ⬜ 需手动填写 |
+| GitHub topic `dsh-plugin`（建议再加 `deepseek-harness`、`dsh`） | ✅（已设置 `dsh-plugin` / `deepseek-harness` / `dsh`） |
+| About 简介 | ✅（已填写功能描述） |
 | LICENSE（MIT，与 `package.json` 一致） | ✅ |
 | README 含功能/安装/两类配置示例/核对方法/兼容版本 | ✅ |
 | awesome-dsh-plugin 条目草稿 `data/plugins/lihongxu0221__dsh-prompt-filter.yml` | ✅ |
-| 首个 Release（含无版本号 `.tgz` 与校验和） | ⬜ 推 tag 后自动生成 |
+| 首个 Release（含无版本号 `.tgz` 与校验和） | ✅（`v0.3.1` 已发布，附件 `dsh-prompt-filter.tgz` / `dsh-prompt-filter-0.3.1.tgz` / `SHA256SUMS`） |
 | 仓库创建满 1 天后提交 PR | ⬜ 需等待满 1 天（提交 PR 前确认） |
 
 提交 awesome-dsh-plugin PR 时只新增 `data/plugins/lihongxu0221__dsh-prompt-filter.yml`，不要改对方的 README；收录规则以当时最新的 awesome-dsh-plugin 贡献指南与 dsh-market `CONTRIBUTING.md` 为准。
