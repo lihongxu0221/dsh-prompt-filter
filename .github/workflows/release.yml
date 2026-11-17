@@ -49,6 +49,7 @@ jobs:
 
       - name: Publish to npm (optional)
         if: env.NODE_AUTH_TOKEN != ''
+        continue-on-error: true
         run: npm publish --access public --provenance
 
       - name: Create GitHub Release
