@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.3] - 2026-11-17
+
+### Added
+
+- Rule defaults are hydrated when a profile's saved config predates a field:
+  `nameMap`, `skillToolName` and `scope.skillCatalog` are filled in only when
+  absent, so upgrading the bundle reaches profiles that already saved a full
+  rule snapshot. Explicit values are never overwritten — including
+  `nameMap: {}`, which still means "rename nothing".
+
 ## [0.3.2] - 2026-11-17
 
 ### Fixed

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import { DEFAULT_SCOPE, FALLBACK_RULES, normalizeConfig } from '../lib/config.js'
+import { DEFAULT_NAME_MAP, DEFAULT_SCOPE, FALLBACK_RULES, normalizeConfig } from '../lib/config.js'
 
 test('missing rules fall back to the built-in default rule set', () => {
   const config = normalizeConfig({})
@@ -54,4 +54,46 @@ test('a non-object config is rejected', () => {
 test('a non-array traceDir is rejected', () => {
   const config = normalizeConfig({ traceDir: 42 })
   assert.ok(config.problems.some((problem) => problem.includes('traceDir')))
+})
+
+test('rules saved by an older profile gain nameMap without losing explicit values', async () => {
+  const { compileRule } = await import('../lib/rule.js')
+  const legacy = {
+    rules: [{
+      id: 'legacy',
+      modelMatch: ['gemini'],
+      stripLines: [],
+      scope: { system: true, toolDescriptions: true, toolNames: false, memoryReminders: true, paths: true },
+    }],
+  }
+  const rule = normalizeConfig(legacy).rules[0]
+  assert.equal(rule.skillToolName, 'skill')
+  assert.deepEqual(rule.nameMap, DEFAULT_NAME_MAP)
+
+  const compiled = compileRule(rule, 0)
+  assert.equal(compiled.names.size, 16)
+  // The profile's explicit choice is not overwritten by hydration.
+  assert.equal(compiled.scope.toolNames, false)
+  assert.equal(compiled.scope.skillCatalog, true)
+})
+
+test('an explicitly empty nameMap still disables renaming', async () => {
+  const { compileRule } = await import('../lib/rule.js')
+  const rule = normalizeConfig({ rules: [{ id: 'quiet', modelMatch: ['gemini'], nameMap: {} }] }).rules[0]
+  assert.deepEqual(rule.nameMap, {})
+  assert.equal(compileRule(rule, 0).names.size, 0)
+})
+
+test('a partial nameMap is kept as authored instead of merged', async () => {
+  const { compileRule } = await import('../lib/rule.js')
+  const authored = { tools: { ops_bash: 'run_bash' } }
+  const rule = normalizeConfig({ rules: [{ id: 'partial', modelMatch: ['gemini'], nameMap: authored }] }).rules[0]
+  assert.deepEqual(rule.nameMap, authored)
+  assert.equal(compileRule(rule, 0).names.size, 1)
+})
+
+test('default rules carry the additive defaults untouched', () => {
+  const rule = normalizeConfig({}).rules[0]
+  assert.deepEqual(rule.nameMap, DEFAULT_NAME_MAP)
+  assert.equal(rule.skillToolName, 'skill')
 })

@@ -73,6 +73,7 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 
 - 本插件的默认配置随 `cordis.patch.yml` 一起安装，可直接使用。
 - 修改 profile 的 `cordis.patch.yml` 中 id 为 `dsh-prompt-filter` 的行即可覆盖配置；**同 id 的行会整体替换 bundle 配置**，请复制完整对象再改（见 `examples/cordis.patch.yml`）。
+- 从 0.3.3 起，profile 里保存的旧规则会自动补上后来新增的字段（`nameMap`、`skillToolName`、`scope.skillCatalog`）：缺失才补，显式写出的值永远优先（包括用 `nameMap: {}` 明确关闭改名）。这样升级插件后无需重置 profile 也能用上新默认值。
 - 配置在插件加载时编译校验；改完配置重启 DSH 生效（至少重启后生效）。非法配置不会让 DSH 崩溃：插件打印 `invalid config, plugin left inactive` 并保持不注册监听器。
 
 ---
