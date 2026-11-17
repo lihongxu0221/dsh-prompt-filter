@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.2] - 2026-11-17
+
+### Fixed
+
+- `GenerateOptions.toolHistory` is now filtered like `options.tools`. On a route
+  that declares `toolUpdate`, upstream `projectToolUpdates`
+  (`packages/llm/llm/src/content.ts`) ignores `options.tools` and rebuilds the
+  tool declarations from `toolHistory`; the unfiltered history leaked the
+  original tool names and descriptions (the exact 429 trigger this plugin
+  exists to remove).
+- Deferred tools no longer go dark: the plugin renamed `tool-addition` blocks
+  to `run_bash`/… while the declaration map still held `ops_bash`, so upstream
+  dropped every addition as undeclared and the tool could never be activated.
+  A single resolver (`toolNameResolver`) now drives `options.tools`,
+  `toolHistory`, and the message blocks, so the names always agree.
+
+### Changed
+
+- `settings.configure({ auto: false })` is registered on the injected child
+  fiber (`sctx.fiber`) instead of the parent fiber, matching the upstream
+  convention.
+- `formatReport` prints `history=<tools>/<additions>` and counts history
+  renames in `renamed=`.
+
+### Documented
+
+- Losing the `markAgentLoopRequest` identity (the filtered request is a clone,
+  and upstream keys `isAgentLoopRequest` on object identity) means
+  `session-title` no longer auto-titles conversations on filtered models.
+  Upstream exposes no writable request-assembly hook, so this is recorded as a
+  known limitation rather than worked around.
+
 ## [0.3.1] - 2026-11-17
 
 ### Fixed
