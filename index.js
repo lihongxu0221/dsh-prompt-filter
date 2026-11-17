@@ -183,7 +183,7 @@ export function apply(ctx, rawConfig) {
     if (typeof ctx.inject === 'function' && ctx.fiber !== undefined) {
       ctx.inject(['settings'], (sctx) => {
         try {
-          sctx.effect(() => sctx.get('settings').configure({ auto: false }, ctx.fiber), 'prompt-filter: settings pages')
+          sctx.effect(() => sctx.get('settings').configure({ auto: false }, sctx.fiber), 'prompt-filter: settings pages')
         } catch (error) {
           log.warn(`settings presentation could not be configured: ${error?.message ?? error}`)
         }

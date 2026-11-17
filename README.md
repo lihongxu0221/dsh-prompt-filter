@@ -36,6 +36,8 @@ v0.2.0 的界面部分（`client.js`）由 `node --test` 的假 React/槽位测�
 
 监听器以 `prepend: true` 注册，因此重新派发时其余 `llm/stream` 监听器（billion-context 等）只会在内层执行一次，不会被跑两遍。
 
+已知限制：DSH 的 `isAgentLoopRequest` 用 `WeakSet` 按**对象身份**判断，而插件发出的是浅拷贝，标记不会跟随。上游唯一的生产消费者是 `session-title`（`packages/session/session-title/src/index.ts`），所以**被过滤模型的会话不再自动生成标题**；其余功能不受影响。上游没有提供可写的请求装配钩子，这是「重写请求」的固有代价，不做 hack 绕过。
+
 重试方面：`dsh-llm-retry` 在 normal 模式下对 `RATE_LIMIT` 会直接排定退避并返回 `{kind:'retry'}`，不会调用下游监听器。因此“相同请求体不再重试”的否决必须注册在它之前（同样 `prepend: true`），命中 `noRetryOn` 时返回 `undefined` 且不调用 `next()`，让本轮直接失败。
 
 过滤范围：
@@ -44,6 +46,7 @@ v0.2.0 的界面部分（`client.js`）由 `node --test` 的假 React/槽位测�
 - developer 角色文本块，以及 `source.kind === 'runtime-context'` 的 `<system-reminder>` 提醒消息（两者同属 `scope.memoryReminders`；普通 user 消息永不修改）。
 - 工具 schema 的 `description`、`parameters` 里各层的 `description`；不碰 enum / default / const 等参数数据。
 - 工具名与技能 id：只通过独立的 `nameMap` 出站改名，并在模型响应流里按同一张表还原（`scope.toolNames` / `scope.skillCatalog`，默认开启），详见 §4.2。
+- `GenerateOptions.toolHistory`：路由声明 `toolUpdate`（`in-history` / `addition-only`）时，上游 `projectToolUpdates` 会忽略 `options.tools`，改用 history 重建工具声明表，所以 history 里的工具名与描述必须与 `options.tools` 同步过滤。
 - 永不修改 user / assistant / tool 消息的正文。
 
 `scope.paths` 默认开启：文本里的带引号路径（源码目录、工作目录）会被替换成 `[path]`，避免 `dsh-windows` 这类路径泄漏品牌名；需要保留真实路径时设 `paths: false`（此时路径中的 `dsh` 不会被替换）。
