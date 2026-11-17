@@ -20,6 +20,8 @@
 
 DSH 升级后，请按第 9 节重新核对默认规则是否仍覆盖全部身份文本。
 
+v0.2.0 的界面部分（`client.js`）由 `node --test` 的假 React/槽位测试覆盖注册逻辑；host 的 `Config` 已在真实 `@deepseek-ai/schemastery` 下验证：可 `toJSON`、各字段被包装成 volatile ref、非法 `rules` 会在写入前被拒。浏览器内的实际排版（四个入口的视觉）需要重启应用后人工看一眼。
+
 ---
 
 ## 2. 工作原理（为什么钩在这里）
@@ -75,7 +77,8 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 ```yaml
 - id: dsh-prompt-filter
   config:
-    enabled: true            # 总开关；false 时不注册任何监听器，行为与未安装一致
+    sidebarEntry: true       # 在左侧栏显示入口；false 时不注册侧栏图标，仍可用 /prompt-filter、插件页、设置页打开
+    enabled: true            # 过滤总开关；false 时监听器仍在但原样放行（GUI 入口保留）
     dryRun: false            # true：只记录/打印，不真正发请求（会产生一次失败回合）
     debug: true              # 每次命中规则都把过滤后的请求写入 trace 目录
     applyToSubagents: true   # false：子代理（origin=subagent / delegationDepth>0）不过滤
@@ -112,6 +115,35 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 `replace` 条目：`{from, to, regex?}`，`from` 同样支持 `/.../flags` 与 `{pattern, regex}`。
 
 规则按数组顺序匹配，第一条命中的规则生效；需要按不同上游/模型分组时写多条规则即可。
+
+### 4.1 界面入口与可视化配置（v0.2.0）
+
+本插件自带浏览器端模块（`client.js`，随 `dsh.client` 声明加载），装好后有四个入口，全部编辑同一份 volatile 配置：
+
+| 入口 | 位置 | 说明 |
+| --- | --- | --- |
+| 侧栏图标 | 左侧栏 `sidebar.panellist`（order 31） | 可在配置里用「在左侧栏显示入口」关闭；关闭后不再注册图标，其余入口不受影响 |
+| 面板 | 侧栏图标 / 插件页「打开面板」/ `/prompt-filter` 命令 | `main` 面板始终注册，所以关掉侧栏入口也能打开 |
+| 插件页配置卡 | 侧栏 Plugins → 本插件行页（`plugins.row.config`）及包页（`plugins.bundle.config`） | 行摘要显示「提示词过滤 · 侧栏入口 开/关」 |
+| 设置页分区 | 设置 → 「提示词过滤」（`settings.section`，order 55） | 与插件页同一张表单 |
+
+可改字段：`sidebarEntry`、`enabled`、`dryRun`、`debug`、`applyToSubagents`、`traceDir`，以及 `rules`（JSON 数组，保存前校验 JSON 语法与数组形状）。保存走配置表单的 `mutate(ops, revision)`，写入当前 profile 的 Cordis patch：
+
+- 所有字段都标了 `.volatile()`，保存后**立即生效**，不重启、不重跑 `apply`；
+- host 在 `apply` 里缓存编译结果，监听 `loader/volatile-update` 后重建；编译失败（例如写坏正则）会保留上一份可用规则并打日志，不会让插件失效；
+- 显式关闭（`enabled: false`）或清空规则会被采纳，监听器改为原样放行。
+
+`rules` 建议先在文本编辑器里改好 YAML 再粘贴；JSON 里 `"regex": true` 与 `/.../flags` 两种写法都保留原样，界面不做结构化改写。
+
+#### 侧栏图标的注册时机（v0.2.1 修复）
+
+`sidebar.panellist` 是 root 级 list 槽位，由 `sidebar.panel.icon` 那一批插件声明。如果同一批激活的插件在槽位声明**之前**就 `slots.register(...)`，这次注册会被运行时丢弃，图标永远不出现（而且不报错）。因此 `client.js` 的 `installSidebar()` 用 `entry/desired/applied/inSlot` 四个状态做门控：
+
+1. 只有 `ctx.slots.inject('sidebar.panellist', cb)` 的回调真正执行（`inSlot = true`）之后才注册图标；
+2. `applyEntry(on)` 用 `applied` 去重，避免 `configForms` 快照每次刷新都重复注册；
+3. 回调的清理函数负责注销图标、退订快照、复位状态，槽位重建时可以重新注册。
+
+同理，**任何槽位注册都应放在对应的 `slots.inject` 回调里**，不要先在服务 effect 里注册。
 
 ---
 
@@ -208,7 +240,7 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
    - 日志出现 `[dsh-prompt-filter] filtered rule=default-gemini-claude …`；
    - `scripts/audit-trace.mjs` 对最新 trace 退出码为 0。
 4. 对照：切到 deepseek 模型新建会话发一条消息，日志中不应出现 `filtered`（规则不匹配），系统提示保持原样。
-5. 关闭插件（`enabled: false`）重启，请求应与安装前完全一致（不做 clone、不做 trace、不注册监听器）。
+5. 关闭过滤（`enabled: false`）：请求应原样放行（不 clone、不 trace），监听器仍在但不改动请求；界面入口保留。
 
 **重要**：测试阶段同一时间只发一条 gemini/claude 请求，也不要并发启动多个探测子代理。连续 429 会让 上游网关 对整个客户端触发 `bili_throttle_hold`，进而阻塞 deepseek 主会话。
 
@@ -222,6 +254,9 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
 - `dryRun` 会真实结束当前回合（错误码 `PROMPT_FILTER_DRY_RUN`），适合验证，不适合日常开启。
 - billion-context 等插件在 fetch 层做的压缩/改写不受本插件控制；本插件只保证交到 adapter 的 `GenerateOptions` 干净。
 - 引号内路径默认脱敏；如用 `paths: false`，路径中的 `dsh` 会保留，可能触发上游拦截，也说明该路径本身含品牌名。
+- 界面配置依赖 profile 的 `configForms`（`@deepseek-ai/dsh-client-ui-settings`）；宿主不提供该服务时卡片会显示“当前 profile 没有为这个插件提供配置表单”，但 YAML 配置与过滤逻辑不受影响。
+- 规则用 JSON 文本框编辑，保存时只校验 JSON 语法与数组形状；字段级错误（如 `mode` 拼错）在下一轮过滤时才由 host 编译发现，此时会保留上一份可用规则并打日志。
+- `sidebarEntry`、`enabled` 等改动只写当前 profile 的 Cordis patch，不写 bundle 自带的 `cordis.patch.yml`；换 profile 需要重新设置。
 
 ---
 
@@ -236,6 +271,8 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
    - `packages/llm/llm/src/message.ts` 的 `ContentBlock` 形状（新增 block 类型时确认过滤逻辑不受影响）。
 3. 打开 `debug`，发一条 gemini 消息，跑 `scripts/audit-trace.mjs`；若出现新 token，把它加进 `cordis.patch.yml` 的 `stripLines` / `replace`，并同步更新本 README 第 5 节与审计脚本的 token 列表。
 4. 确认 dry-run 与 `enabled: false` 行为未变。
+5. 界面：设置 → 「提示词过滤」一节能打开；插件行页有配置卡；关掉侧栏入口后图标消失，`/prompt-filter` 仍能打开面板。
+6. 配置表单的 namespace 若不再是行 id（当前为 `dsh-prompt-filter`），`plugins.row.config` 的 page 会退化成无 form 的卡片；用 `settings.describe()` 的输出核对 `ns`。
 
 ---
 
@@ -255,7 +292,8 @@ plugin_manager remove_bundle → target = dsh-prompt-filter
 dsh-prompt-filter/
 ├─ package.json            # bundle 清单（dsh.bundle.patch 指向 cordis.patch.yml）
 ├─ cordis.patch.yml        # 默认插件行 + 完整默认规则
-├─ index.js                # apply()：注册 llm/stream 与 agent/request-error 监听器
+├─ index.js                # apply()：Config schema、编译缓存、volatile 重建、两个监听器
+├─ client.js               # 浏览器端：侧栏入口/面板、插件页与设置页配置卡、/prompt-filter
 ├─ lib/
 │  ├─ config.js            # 默认值、归一化、校验
 │  ├─ pattern.js           # 子串 / 正则编译
@@ -267,12 +305,13 @@ dsh-prompt-filter/
 │  ├─ rule.js              # 规则编译（错误带上下文）
 │  ├─ retry.js             # noRetryOn 否决 + 会话模型记忆
 │  ├─ session.js           # 子代理识别
-│  └─ trace.js             # trace 写入与 dry-run 流
+│  ├─ trace.js             # trace 写入与 dry-run 流
+│  └─ volatile.js          # 解包 loader 的 volatile 字段
 ├─ locale/{en,zh-CN}.json  # 插件列表展示
 ├─ icon.svg
 ├─ examples/cordis.patch.yml
 ├─ scripts/audit-trace.mjs
-├─ test/                   # node --test（51 项）
+├─ test/                   # node --test（61 项）
 └─ README.md
 ```
 

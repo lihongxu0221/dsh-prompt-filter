@@ -110,10 +110,24 @@ test('a non-matching model is passed straight through', () => {
   assert.equal(calls.length, 0)
 })
 
-test('disabled config registers no listeners at all', () => {
-  const { ctx, listeners } = makeCtx()
+test('a disabled config keeps pass-through listeners and never filters', () => {
+  const { ctx, listeners, calls } = makeCtx()
   apply(ctx, { ...configOf(), enabled: false })
-  assert.equal(listeners.size, 0)
+  // The listeners stay registered so a later GUI save can turn filtering back
+  // on without restarting the plugin; they must not touch the request.
+  assert.deepEqual([...listeners.keys()].sort(), ['agent/request-error', 'llm/stream', 'loader/volatile-update'])
+
+  listeners.get('llm/stream').listener(optionsOf(), () => {})
+  assert.equal(calls.length, 0)
+
+  const veto = listeners.get('agent/request-error')
+  let nextCalls = 0
+  const action = veto.listener({
+    agent: { session: { id: 'session-1', header: { isSeeded: true } } },
+    failure: { code: 'RATE_LIMIT', message: 'Resource has been exhausted' },
+  }, () => { nextCalls += 1; return undefined })
+  assert.equal(action, undefined)
+  assert.equal(nextCalls, 1)
 })
 
 test('dry-run yields a finish error and sends nothing', async () => {

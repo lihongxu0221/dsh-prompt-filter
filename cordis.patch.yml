@@ -6,12 +6,16 @@
 #
 # Every default below is data-driven: delete a strip/replace entry to stop
 # filtering that string, or add your own rule with its own `modelMatch`.
-# `enabled: false` removes every listener, making requests byte-identical to
-# a profile without this bundle.
+# `enabled: false` turns filtering off (requests stay byte-identical to a
+# profile without this bundle) while the GUI entries stay available.
 - insert:
     - id: dsh-prompt-filter
       name: dsh-prompt-filter
       config:
+        # Show the panel icon in the left sidebar. Turning it off only drops
+        # the sidebar entry: `/prompt-filter`, the plugin page, and the
+        # settings page still open the panel. Persisted in this profile.
+        sidebarEntry: true
         enabled: true
         # `dryRun` logs and writes the filtered body, then fails the turn with
         # PROMPT_FILTER_DRY_RUN instead of sending it.
