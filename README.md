@@ -2,6 +2,8 @@
 
 一个独立的 DeepSeek Harness（DSH）插件：在请求发往上游模型网关之前，按模型名匹配规则，剥离请求中的 Harness 身份信息——包括系统提示里的身份句、GUI 说明、实现源码路径、搜索工具名、上下文压缩链接，以及工具定义描述里的 `DSH` / `Harness` / `ACP` 等字样。
 
+另外支持两类分离的改写：只出站不还原的 `stripLines` / `replace`，以及出站改名、入站还原的 `nameMap`（工具名与技能 id）。
+
 用于修复 gemini / claude 分组模型（`group/gemini-*`、`group/claude-*`）在 magpie 上游返回 `429 Resource has been exhausted (e.g. check quota)` 的问题：该上游会把系统提示里的 "DeepSeek Harness" 身份文本当成敏感内容直接拒绝，即使额度充足。
 
 插件不修改 DSH 核心、不修改 `@deepseek-ai/dsh-system-prompt`、不向会话日志写入过滤后的文本；插件禁用时请求与现在完全一致。
@@ -41,7 +43,7 @@ v0.2.0 的界面部分（`client.js`）由 `node --test` 的假 React/槽位测�
 - system 角色的全部文本块（系统提示 + 运行时上下文 + 记忆块）。
 - developer 角色文本块，以及 `source.kind === 'runtime-context'` 的 `<system-reminder>` 提醒消息（两者同属 `scope.memoryReminders`；普通 user 消息永不修改）。
 - 工具 schema 的 `description`、`parameters` 里各层的 `description`；不碰 enum / default / const 等参数数据。
-- 可选：工具名（`scope.toolNames`，默认关闭；开启后只做安全字符集校验并同步改写 assistant 消息里对应的 `tool-call` 名，但不改写 tool 结果消息的关联，属于高风险选项）。
+- 工具名与技能 id：只通过独立的 `nameMap` 出站改名，并在模型响应流里按同一张表还原（`scope.toolNames` / `scope.skillCatalog`，默认开启），详见 §4.2。
 - 永不修改 user / assistant / tool 消息的正文。
 
 `scope.paths` 默认开启：文本里的带引号路径（源码目录、工作目录）会被替换成 `[path]`，避免 `dsh-windows` 这类路径泄漏品牌名；需要保留真实路径时设 `paths: false`（此时路径中的 `dsh` 不会被替换）。
@@ -95,11 +97,21 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
         scope:
           system: true
           toolDescriptions: true
-          toolNames: false   # 高风险：会重命名工具并改写 assistant 消息中的调用名
+          toolNames: true    # 通过 nameMap 改工具名，入站还原（见 §4.2）
+          skillCatalog: true # 技能目录与 skill 工具参数里的技能 id 同样改名/还原
           memoryReminders: true  # developer 记忆块 + runtime-context 提醒消息
           paths: true        # false 时保留引号内的真实路径
-        stripLines: [...]
-        replace: [...]
+        skillToolName: skill # 承载技能 id 的工具名（默认 skill）
+        stripLines: [...]    # 只出站：删行/删段，永不还原
+        replace: [...]       # 只出站：文本替换，永不还原
+        nameMap:             # 出站改名 + 入站还原；不要把这些标识符再写进 replace
+          tools:
+            ops_bash: run_bash
+            ops_grep: search_text
+            plugin_manager: plugin_registry
+          skills:
+            dsh-badge: assistant-badge
+            dsh-doc: product-doc
 ```
 
 `modelMatch` 的匹配对象是 `provider`、`model`、`provider/model` 三者，任一命中即生效。
@@ -115,6 +127,18 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 `replace` 条目：`{from, to, regex?}`，`from` 同样支持 `/.../flags` 与 `{pattern, regex}`。
 
 规则按数组顺序匹配，第一条命中的规则生效；需要按不同上游/模型分组时写多条规则即可。
+
+### 4.2 两类改写必须分开（重要）
+
+**第一类：只出站改写，不还原** —— `stripLines`、`replace`、`identityOverride`。用于身份句、说明文字、正文里的品牌词。改出去就不管回来，因为入站不需要这些文本。
+
+**第二类：出站改名 + 入站还原** —— `nameMap.tools` 与 `nameMap.skills`。只用于 DSH 还要靠原名解析执行的标识符，例如工具名 `ops_bash` 和技能 id `dsh-badge`。模型看到的是中性名，响应回到 DSH 之前由 `llm/stream` 的包装流按同一张表改回原名，因此：
+
+- 工具调用的 `tool-call-delta.name`、权威 `block-end` 块、`tool-addition` / `tool-removal` 都会还原；
+- `skill` 工具的 `arguments` JSON 里的 `name` 会还原，分片流式参数按调用索引缓冲后整段下发，避免中性 id 漏进 DSH；
+- 映射天然一对一双向唯一、每轮稳定；目标名不许含 `dsh` / `acp` / `harness`，也不许与源名相同。
+
+**不要**把工具名或技能 id 写进 `replace`：编译期会直接报错并提示 `move it to nameMap so the response can be restored`。两类配置互不影响，可以单独增删：从 `nameMap` 里删掉某个工具，该工具出站不再改名、入站也不再还原。
 
 ### 4.1 界面入口与可视化配置（v0.2.0）
 
@@ -170,6 +194,19 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 | `ACP` | 替换为 `cross-session` |
 | `DeepSeek Harness` / `Harness` | 替换为 `the agent` / `agent` |
 | 孤立的 `DSH` / `dsh`（前后不是字母数字） | 替换为 `APP` / `app` |
+| `powered by dsh` / `DSH plugin` / `DSH sandbox` | 替换为 `powered by the assistant` / `plugin` / `sandbox` |
+| `ACP TAGS` / `ACP marker integrity` | 替换为 `CONTEXT TAGS` / `context marker integrity` |
+| persona 行 `You are a coding agent powered by the <model> model.` | 正则整行删除 |
+| `Current agent implementation checkout:` / `Current Web GUI URL:` | 整行删除 |
+
+工具名与技能 id 不带中文、不在 `replace` 里，而由 `nameMap` 处理：
+
+| 原名 | 对外名 |
+| --- | --- |
+| `ops_bash` / `ops_grep` / `ops_glob` / `ops_inspect_local_file` / `ops_discover_tools` | `run_bash` / `search_text` / `find_files` / `inspect_file` / `discover_tools` |
+| `acp_cache` / `acp_status` / `acp_read_original_image` | `cache_reconcile` / `context_status` / `read_original_image` |
+| `plugin_manager` / `session_event_read` / `session_event_search` / `session_event_trace` | `plugin_registry` / `event_read` / `event_search` / `event_trace` |
+| 技能 `dsh-badge` / `dsh-doc` / `official-plugins` / `diagnose-windows-sandbox-acl` | `assistant-badge` / `product-doc` / `plugin-catalog` / `sandbox-acl-diagnostics` |
 
 所有规则都在 YAML 里，改配置不需要改代码。
 
@@ -239,8 +276,10 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
    - 回合正常返回（200，不再出现 `Resource has been exhausted`）；
    - 日志出现 `[dsh-prompt-filter] filtered rule=default-gemini-claude …`；
    - `scripts/audit-trace.mjs` 对最新 trace 退出码为 0。
-4. 对照：切到 deepseek 模型新建会话发一条消息，日志中不应出现 `filtered`（规则不匹配），系统提示保持原样。
-5. 关闭过滤（`enabled: false`）：请求应原样放行（不 clone、不 trace），监听器仍在但不改动请求；界面入口保留。
+4. 对 `group/gemini-3.8-flash` 的实际请求跑 `scripts/audit-trace.mjs`：`systemInstruction`、`reminderTexts`、`toolSchemas[].description` 与工具名里应搜不到 `DeepSeek Harness` / `dsh` / `DSH` / `ACP` / `billion-context` / `__DSH_BOOT__` / `deepseek-tools` / `deepseek-official`（中性名除外）。工具 `parameters` 里的 `enum` 值（例如搜索提供方 id）属于运行参数，按设计保留。
+5. 打一轮会调用工具或技能的对话：DSH 能正常解析并执行；日志里到达 DSH 的调用名是原名（`ops_bash`、`skill` 的 `dsh-doc` 等）。
+6. 对照：切到 deepseek 模型新建会话发一条消息，日志中不应出现 `filtered`（规则不匹配），系统提示、工具名与技能 id 保持原样。
+7. 关闭过滤（`enabled: false`）：请求应原样放行（不 clone、不 trace），监听器仍在但不改动请求；界面入口保留。
 
 **重要**：测试阶段同一时间只发一条 gemini/claude 请求，也不要并发启动多个探测子代理。连续 429 会让 上游网关 对整个客户端触发 `bili_throttle_hold`，进而阻塞 deepseek 主会话。
 
@@ -249,7 +288,8 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
 ## 8. 已知限制
 
 - 过滤只发生在请求层：会话界面、日志、`session` 文件里仍是未过滤的原文；这保证插件禁用或卸载后历史完全一致。
-- 工具名默认不改；`toolNames: true` 会让工具名与 assistant 消息中的调用名一致变化，但历史工具结果、外部脚本、用户习惯都可能失配，默认保持关闭。
+- 工具名与技能 id 通过 `nameMap` 改名并还原；映射是静态配置，因此每轮稳定。若某个工具没写进 `nameMap`，它出站保持原名且不会触发还原。
+- 工具 `parameters` 的 `enum` / `default` / `const` 值不做替换（它们可能是 provider 的真实参数值）；只改 `description`。
 - `noRetryOn` 只阻止“同一请求体重试”，不改变本轮最终错误：会话里仍会显示 429，只是不再重复打 5 次。
 - `dryRun` 会真实结束当前回合（错误码 `PROMPT_FILTER_DRY_RUN`），适合验证，不适合日常开启。
 - billion-context 等插件在 fetch 层做的压缩/改写不受本插件控制；本插件只保证交到 adapter 的 `GenerateOptions` 干净。
@@ -296,25 +336,80 @@ dsh-prompt-filter/
 ├─ client.js               # 浏览器端：侧栏入口/面板、插件页与设置页配置卡、/prompt-filter
 ├─ lib/
 │  ├─ config.js            # 默认值、归一化、校验
+│  ├─ names.js             # nameMap 编译（双向唯一、品牌名校验、整词替换/还原）
+│  ├─ inbound.js           # 响应流还原（tool-call / skill 参数 / 分片缓冲）
 │  ├─ pattern.js           # 子串 / 正则编译
 │  ├─ match.js             # modelMatch 匹配
 │  ├─ text.js              # 删行/删段、替换、路径脱敏
-│  ├─ tools.js             # 工具描述与参数描述的过滤
-│  ├─ messages.js          # system / developer 文本过滤
+│  ├─ tools.js             # 工具描述过滤 + 工具名改名
+│  ├─ messages.js          # system / developer / skill-catalog 文本过滤
 │  ├─ request.js           # 克隆请求、生成报告
 │  ├─ rule.js              # 规则编译（错误带上下文）
 │  ├─ retry.js             # noRetryOn 否决 + 会话模型记忆
 │  ├─ session.js           # 子代理识别
 │  ├─ trace.js             # trace 写入与 dry-run 流
+│  ├─ version.js           # 版本常量（与 package.json、git tag 一致）
 │  └─ volatile.js          # 解包 loader 的 volatile 字段
 ├─ locale/{en,zh-CN}.json  # 插件列表展示
 ├─ icon.svg
-├─ examples/cordis.patch.yml
-├─ scripts/audit-trace.mjs
-├─ test/                   # node --test（61 项）
+├─ LICENSE                 # MIT
+├─ CHANGELOG.md
+├─ examples/cordis.patch.yml   # profile 覆盖示例（两类配置分开）
+├─ examples/profile.yml
+├─ data/plugins/lihongxu0221__dsh-prompt-filter.yml   # awesome-dsh-plugin 条目草稿
+├─ .github/workflows/release.yml
+├─ scripts/{audit-trace,build,check-version}.mjs
+├─ test/                   # node --test（72 项）
 └─ README.md
 ```
 
 ## 12. 许可
 
-本插件为本地私有 bundle（`"private": true`），无第三方依赖；可按需修改。
+MIT License，见 [LICENSE](./LICENSE)。插件无运行时第三方依赖（`@deepseek-ai/*` 均为 peerDependencies，由 DSH 运行时提供）。
+
+---
+
+## 13. 发版与市场收录
+
+### 13.1 安装方式（用户视角）
+
+| 方式 | 命令 |
+| --- | --- |
+| 本地目录链接（开发） | `dsh plugin --profile desktop add "E:/AI/Agents/Deepseek Harness/DSH/dsh-prompt-filter"` |
+| npm 预构建包 | `dsh plugin --profile desktop add dsh-prompt-filter` |
+| Release tarball | 从 GitHub Release 下载 `dsh-prompt-filter.tgz`，再 `dsh plugin --profile desktop add ./dsh-prompt-filter.tgz` |
+
+### 13.2 自动发版（GitHub Actions）
+
+1. 确认 `package.json` 的 `version` 与 `lib/version.js` 的 `VERSION` 一致（`npm run build` 会检查）。
+2. 一键发版：
+
+```bash
+npm version patch        # 或 minor / major，自动打 vX.Y.Z tag
+git push --follow-tags
+```
+
+3. 推送 `vX.Y.Z` tag 后，`.github/workflows/release.yml` 会：安装依赖 → 构建 → 跑测试 → 校验 tag 与版本一致 → `npm pack` 打包 → 计算 SHA-256 → 创建**正式**（非草稿）GitHub Release，并附上：
+   - `dsh-prompt-filter.tgz`（无版本号，供 `releases/latest/download/dsh-prompt-filter.tgz` 长期引用）；
+   - `dsh-prompt-filter-<version>.tgz`；
+   - `SHA256SUMS`。
+4. 任一步失败都不会创建 Release。
+5. 若仓库配置了 `NPM_TOKEN` secret，会顺带 `npm publish --access public`；没有令牌时该步骤跳过，不影响 Release。
+
+### 13.3 dsh-market / awesome-dsh-plugin 收录清单
+
+| 条件 | 状态 |
+| --- | --- |
+| 公开仓库、非官方本体、未归档、根目录真实代码 | ✅（GitHub `lihongxu0221/dsh-prompt-filter`） |
+| `package.json` 声明 `dsh.bundle.patch` | ✅ |
+| 官方 `@deepseek-ai/*` 在 `peerDependencies` | ✅（`@deepseek-ai/schemastery`） |
+| 根目录 `cordis.patch.yml` | ✅ |
+| GitHub topic `dsh-plugin`（建议再加 `deepseek-harness`、`dsh`） | ⬜ 需在仓库 Settings 里手动勾选 |
+| About 简介 | ⬜ 需手动填写 |
+| LICENSE（MIT，与 `package.json` 一致） | ✅ |
+| README 含功能/安装/两类配置示例/核对方法/兼容版本 | ✅ |
+| awesome-dsh-plugin 条目草稿 `data/plugins/lihongxu0221__dsh-prompt-filter.yml` | ✅ |
+| 首个 Release（含无版本号 `.tgz` 与校验和） | ⬜ 推 tag 后自动生成 |
+| 仓库创建满 1 天后提交 PR | ⬜ 需等待满 1 天（提交 PR 前确认） |
+
+提交 awesome-dsh-plugin PR 时只新增 `data/plugins/lihongxu0221__dsh-prompt-filter.yml`，不要改对方的 README；收录规则以当时最新的 awesome-dsh-plugin 贡献指南与 dsh-market `CONTRIBUTING.md` 为准。

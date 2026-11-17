@@ -88,8 +88,8 @@ test('tool name renames propagate to assistant tool-call blocks', () => {
   const renaming = compileRule({
     modelMatch: ['gemini'],
     stripLines: [],
-    replace: [{ from: 'ops_bash', to: 'shell_exec' }],
-    scope: { toolNames: true },
+    replace: [],
+    nameMap: { tools: { ops_bash: 'shell_exec' } },
   }, 0)
   const result = buildFilteredRequest(optionsOf(), renaming, {})
   assert.equal(result.changed, true)

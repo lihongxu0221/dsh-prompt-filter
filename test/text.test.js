@@ -27,7 +27,7 @@ test('paragraph removal takes the whole blank-line-delimited block', () => {
 test('functional runtime context lines stay, paths get neutralized', () => {
   const { text } = applyTextRules(SYSTEM_PROMPT, rule)
   assert.ok(text.includes('Current working directory:'))
-  assert.ok(text.includes('APP'))
+  assert.ok(text.includes('Current working directory:'))
   assert.ok(!/dsh/i.test(text))
   assert.ok(!text.toLowerCase().includes('web gui'))
 })

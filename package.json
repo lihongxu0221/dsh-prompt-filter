@@ -1,8 +1,7 @@
 {
   "name": "dsh-prompt-filter",
-  "version": "0.2.1",
-  "private": true,
-  "description": "Filter DeepSeek Harness identity out of requests sent to selected models (gemini/claude): system prompt text, tool descriptions, and identical-retry protection.",
+  "version": "0.3.0",
+  "description": "Rewrites DeepSeek Harness identity text out of requests sent to selected models (gemini, claude) and renames tool and skill identifiers outbound while restoring the original names in model responses.",
   "type": "module",
   "main": "index.js",
   "exports": {
@@ -20,11 +19,15 @@
     "locale",
     "icon.svg",
     "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "examples",
     "scripts",
     "test"
   ],
   "scripts": {
+    "build": "node scripts/build.mjs",
+    "check-version": "node scripts/check-version.mjs",
     "test": "node --test"
   },
   "dsh": {
@@ -47,5 +50,23 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "prompt-filter",
+    "identity",
+    "gemini",
+    "claude"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lihongxu0221/dsh-prompt-filter.git"
+  },
+  "homepage": "https://github.com/lihongxu0221/dsh-prompt-filter#readme",
+  "bugs": {
+    "url": "https://github.com/lihongxu0221/dsh-prompt-filter/issues"
   }
 }

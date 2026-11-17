@@ -29,19 +29,20 @@ test('parameters keep enum values and rewrite only descriptions', () => {
   assert.deepEqual(result.tools[0].parameters.required, ['command'])
 })
 
-test('tool names stay unchanged by default', () => {
+test('default nameMap renames known tools outbound', () => {
   const result = filterTools(TOOLS, rule)
-  assert.deepEqual(result.tools.map((tool) => tool.name), TOOLS.map((tool) => tool.name))
-  assert.equal(result.namesChanged, 0)
-  assert.equal(result.nameMap.size, 0)
+  assert.deepEqual(result.tools.map((tool) => tool.name), ['run_bash', 'context_status', 'plugin_registry'])
+  assert.equal(result.namesChanged, 3)
+  assert.equal(result.nameMap.get('ops_bash'), 'run_bash')
+  assert.equal(result.nameMap.get('acp_status'), 'context_status')
 })
 
-test('scope.toolNames renames schemas through the replace rules', () => {
+test('scope.toolNames renames schemas through nameMap', () => {
   const renamed = compileRule({
     modelMatch: ['gemini'],
     stripLines: [],
-    replace: [{ from: 'ops_bash', to: 'shell_exec' }],
-    scope: { toolNames: true },
+    replace: [],
+    nameMap: { tools: { ops_bash: 'shell_exec' } },
   }, 0)
   const result = filterTools(TOOLS, renamed)
   assert.equal(result.namesChanged, 1)
@@ -49,22 +50,19 @@ test('scope.toolNames renames schemas through the replace rules', () => {
   assert.ok(result.tools.some((tool) => tool.name === 'shell_exec'))
 })
 
-test('tool renames never collide with an existing or already-taken name', () => {
+test('tool renames never collide with an existing tool name', () => {
   const renamed = compileRule({
     modelMatch: ['gemini'],
     stripLines: [],
-    replace: [{ from: 'alpha_dsh', to: 'beta_tool' }, { from: 'beta_dsh', to: 'beta_tool' }],
-    scope: { toolNames: true },
+    replace: [],
+    nameMap: { tools: { alpha_dsh: 'beta_tool' } },
   }, 0)
   const tools = [
     { name: 'alpha_dsh', description: 'a', parameters: {} },
-    { name: 'beta_dsh', description: 'b', parameters: {} },
     { name: 'beta_tool', description: 'existing', parameters: {} },
   ]
   const result = filterTools(tools, renamed)
-  const names = result.tools.map((tool) => tool.name)
-  assert.equal(new Set(names).size, names.length)
-  assert.ok(names.includes('beta_tool'))
+  assert.deepEqual(result.tools.map((tool) => tool.name), ['alpha_dsh', 'beta_tool'])
   assert.equal(result.nameMap.size, 0)
 })
 

@@ -72,7 +72,7 @@ test('plain() unwraps volatile references recursively and leaves cycles alone', 
 
 test('a volatile config is committed live through loader/volatile-update', () => {
   const { ctx, listeners, calls } = makeCtx()
-  let rules = [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: ['You are an AI agent powered by DeepSeek Harness.'] }]
+  let rules = [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: [{ pattern: 'You are an AI agent', regex: true }] }]
   const sidebarEntry = ref(() => true)
   apply(ctx, {
     sidebarEntry,
@@ -100,7 +100,7 @@ test('a volatile config is committed live through loader/volatile-update', () =>
 
 test('an invalid volatile commit keeps the last valid rules', () => {
   const { ctx, listeners, calls } = makeCtx()
-  let rules = [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: ['You are an AI agent powered by DeepSeek Harness.'] }]
+  let rules = [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: [{ pattern: 'You are an AI agent', regex: true }] }]
   apply(ctx, { enabled: ref(() => true), rules: ref(() => rules) })
   const stream = listeners.get('llm/stream')
 
@@ -121,7 +121,7 @@ test('turning filtering off live passes the next request straight through', () =
   let nextCalls = 0
   apply(ctx, {
     enabled: ref(() => enabled),
-    rules: ref(() => [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: ['You are an AI agent powered by DeepSeek Harness.'] }]),
+    rules: ref(() => [{ id: 'rule-a', modelMatch: ['gemini'], stripLines: [{ pattern: 'You are an AI agent', regex: true }] }]),
   })
   const stream = listeners.get('llm/stream')
   const next = () => { nextCalls += 1; return (async function* pass() { yield { type: 'finish', reason: { kind: 'stop' } } })() }

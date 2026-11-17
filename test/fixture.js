@@ -1,7 +1,7 @@
 /** Realistic prompt/tool fixtures for the filter unit tests (offline, sanitized). */
 
 export const SYSTEM_PROMPT = [
-  'You are an AI agent powered by DeepSeek Harness.',
+  'You are an AI agent, powered by DeepSeek Harness.',
   '',
   'You are a coding agent powered by the group/gemini-3.8-flash model.',
   'Work in the current repository and follow the project instructions.',

@@ -21,6 +21,8 @@
  */
 
 import { normalizeConfig } from './lib/config.js'
+import { restoreStream } from './lib/inbound.js'
+import { VERSION } from './lib/version.js'
 import { matchModel } from './lib/match.js'
 import { buildFilteredRequest, formatReport } from './lib/request.js'
 import { matchesNoRetry, modelForSession, recordModel } from './lib/retry.js'
@@ -30,6 +32,7 @@ import { dryRunStream, writeTrace } from './lib/trace.js'
 import { plain } from './lib/volatile.js'
 
 export const name = 'dsh-prompt-filter'
+export const version = VERSION
 
 /** `llm` is the hook surface; `agents` is optional and looked up lazily. */
 export const inject = ['llm']
@@ -72,7 +75,7 @@ export const Config = Schema === undefined ? undefined : Schema.object({
     .description('trace 目录；留空使用默认位置。'),
   /** Rule list; validated by the plugin so schema stays forward-compatible. */
   rules: Schema.array(Schema.any()).default([]).volatile()
-    .description('过滤规则：id、modelMatch、identityOverride、noRetryOn、scope、stripLines、replace。'),
+    .description('过滤规则：id、modelMatch、identityOverride、noRetryOn、scope、stripLines、replace、nameMap。'),
 })
 
 function makeLogger(ctx) {
@@ -235,7 +238,11 @@ export function apply(ctx, rawConfig) {
 
     log.info(`filtered ${formatReport(filtered.report)}`)
     dispatched.add(filtered.request)
-    return ctx.llm.stream(filtered.request)
+    const stream = ctx.llm.stream(filtered.request)
+    // Restore the original tool names / skill ids on the way back, before DSH
+    // parses and executes the call. The mapping is static, so it is stable for
+    // every turn, every parallel call, and every retry of this rule.
+    return rule.names.size > 0 ? restoreStream(stream, rule) : stream
   }, { prepend: true })
 
   ctx.on('agent/request-error', (payload, next) => {

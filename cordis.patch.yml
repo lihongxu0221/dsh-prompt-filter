@@ -4,8 +4,13 @@
 # A matching override written in the profile's own cordis.patch.yml replaces
 # this `config` object wholesale, so keep a copy of anything you customize.
 #
-# Every default below is data-driven: delete a strip/replace entry to stop
-# filtering that string, or add your own rule with its own `modelMatch`.
+# Two independent kinds of rewrite live under `rules`:
+#   - `stripLines` / `replace` / `identityOverride`: outbound only. Nothing is
+#     restored on the response; use them for prose, identity lines and brands.
+#   - `nameMap`: outbound rename + inbound restore. Only for identifiers that
+#     DSH must still resolve (tool names, skill ids). Never put those in
+#     `replace`, and never put prose in `nameMap`.
+#
 # `enabled: false` turns filtering off (requests stay byte-identical to a
 # profile without this bundle) while the GUI entries stay available.
 - insert:
@@ -26,32 +31,38 @@
         traceDir: ''
         rules:
           - id: default-gemini-claude
+            # "contains" match, so `group/gemini-3.8-flash` and
+            # `group/claude-opus-4.6-thinking` both hit; strings starting with
+            # `re:` are treated as regular expressions.
             modelMatch:
               - gemini
               - claude
             identityOverride: You are a helpful coding assistant.
+            skillToolName: skill
             noRetryOn:
               - Resource has been exhausted
               - RATE_LIMIT
             scope:
               system: true
               toolDescriptions: true
-              # Renaming tools also rewrites assistant tool-call names; keep
-              # this off unless the upstream demands neutral tool names.
-              toolNames: false
+              # Outbound rename + inbound restore for tool names and skill ids.
+              toolNames: true
               memoryReminders: true
               # Redact brand tokens inside quoted path strings. Disable to keep
               # the real cwd/profile paths visible to the model.
               paths: true
+              # Rewrite `<available_skills>` catalog text and ids.
+              skillCatalog: true
             stripLines:
-              - pattern: You are an AI agent powered by DeepSeek Harness.
+              - pattern: You are an AI agent, powered by DeepSeek Harness.
               - pattern: The runtime context names the DeepSeek Harness implementation checkout.
                 mode: paragraph
               - pattern: You are interacting with the user through the DeepSeek Harness Web GUI
                 mode: paragraph
               - pattern: 'Current DeepSeek Harness implementation checkout:'
               - pattern: 'Current DeepSeek Harness Web GUI URL:'
-              - pattern: The session workspace
+              - pattern: 'Current agent implementation checkout:'
+              - pattern: 'The session workspace'
               - pattern: 'also includes these source folders:'
               - pattern: github.com/ranxianglei/billion-context
                 mode: paragraph
@@ -59,6 +70,8 @@
                 regex: true
             replace:
               - from: 'window.__DSH_BOOT__'
+                to: the app boot payload
+              - from: '__DSH_BOOT__'
                 to: the app boot payload
               - from: 'Current DSH file policy:'
                 to: 'Current file policy:'
@@ -68,8 +81,18 @@
                 to: The file sandbox does not restrict
               - from: DSH session cwd
                 to: session cwd
+              - from: DSH plugin
+                to: plugin
+              - from: DSH sandbox
+                to: sandbox
+              - from: ACP marker integrity
+                to: context marker integrity
+              - from: ACP TAGS
+                to: CONTEXT TAGS
               - from: dsh web
                 to: the app
+              - from: powered by dsh
+                to: powered by the assistant
               - from: DeepSeek Harness
                 to: the agent
               - from: Harness
@@ -78,6 +101,10 @@
                 to: cross-session
               - from: billion-context
                 to: context-compaction
+              - from: github.com/ranxianglei/context-compaction
+                to: the context-compaction project
+              - from: github.com/ranxianglei/billion-context
+                to: the context-compaction project
               - from: deepseek-tools
                 to: search-tools
               - from: deepseek-official
@@ -90,3 +117,25 @@
               - from: '(?<![A-Za-z0-9])dsh(?![A-Za-z0-9])'
                 to: app
                 regex: true
+            # Outbound rename + inbound restore. Add or remove one entry and it
+            # stops being renamed outbound and restored inbound. Names must be
+            # one-to-one and must not contain dsh/acp/harness.
+            nameMap:
+              tools:
+                ops_bash: run_bash
+                ops_grep: search_text
+                ops_glob: find_files
+                ops_inspect_local_file: inspect_file
+                ops_discover_tools: discover_tools
+                acp_cache: cache_reconcile
+                acp_status: context_status
+                acp_read_original_image: read_original_image
+                plugin_manager: plugin_registry
+                session_event_read: event_read
+                session_event_search: event_search
+                session_event_trace: event_trace
+              skills:
+                dsh-badge: assistant-badge
+                dsh-doc: product-doc
+                official-plugins: plugin-catalog
+                diagnose-windows-sandbox-acl: sandbox-acl-diagnostics

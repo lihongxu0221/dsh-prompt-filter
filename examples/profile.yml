@@ -1,0 +1,73 @@
+# Example profile fragment for the desktop profile.
+#
+# The plugin ships its own cordis.patch.yml, so installing the bundle already
+# inserts the `dsh-prompt-filter` row with the default configuration. The
+# fragment below shows how to override that row from your profile when you
+# want to tune the rules.
+#
+# Install first (either command):
+#   dsh plugin --profile desktop add "E:/AI/Agents/Deepseek Harness/DSH/dsh-prompt-filter"
+#   dsh plugin --profile desktop add dsh-prompt-filter
+#
+# Then restart DSH (or reload the plugin row).
+
+plugins:
+  - name: dsh-prompt-filter
+    config:
+      sidebarEntry: true
+      enabled: true
+      dryRun: false
+      debug: false
+      applyToSubagents: true
+      rules:
+        - modelMatch: ["gemini", "claude"]       # substring match, case-insensitive
+          identityOverride: "You are a helpful coding assistant."
+          skillToolName: skill
+          noRetryOn:
+            - "Resource has been exhausted"
+          scope:
+            system: true
+            toolDescriptions: true
+            toolNames: true                       # enables nameMap below
+            memoryReminders: true
+            paths: true
+            skillCatalog: true
+
+          # ---- class 1: outbound-only rewrites (never restored) -------------
+          stripLines:
+            - pattern: '^\s*You are an AI agent,? powered by .+\.\s*$'
+              regex: true
+            - pattern: 'You are interacting with the user through the .* Web GUI'
+              mode: paragraph
+            - 'Current agent implementation checkout:'
+            - 'The session workspace'
+          replace:
+            - from: 'deepseek-tools'
+              to: 'search-tools'
+            - from: 'deepseek-official'
+              to: 'search-official'
+            - from: 'DeepSeek Harness'
+              to: 'the agent'
+            - from: 'billion-context'
+              to: 'context-compaction'
+            - from: 'ACP TAGS'
+              to: 'CONTEXT TAGS'
+
+          # ---- class 2: outbound rename + inbound restore -------------------
+          # Keep identifiers only here; do not repeat them in `replace`.
+          nameMap:
+            tools:
+              ops_bash: run_bash
+              ops_grep: search_text
+              ops_glob: find_files
+              acp_cache: cache_reconcile
+              acp_status: context_status
+              plugin_manager: plugin_registry
+              session_event_read: event_read
+              session_event_search: event_search
+              session_event_trace: event_trace
+            skills:
+              dsh-badge: assistant-badge
+              dsh-doc: product-doc
+              official-plugins: plugin-catalog
+              diagnose-windows-sandbox-acl: sandbox-acl-diagnostics

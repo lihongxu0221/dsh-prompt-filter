@@ -40,9 +40,10 @@ test('non-boolean scope entries are reported by rule compilation', async () => {
   )
 })
 
-test('default scope keeps tool names off and paths on', () => {
-  assert.equal(DEFAULT_SCOPE.toolNames, false)
+test('default scope renames names and redacts paths', () => {
+  assert.equal(DEFAULT_SCOPE.toolNames, true)
   assert.equal(DEFAULT_SCOPE.paths, true)
+  assert.equal(DEFAULT_SCOPE.skillCatalog, true)
 })
 
 test('a non-object config is rejected', () => {

@@ -1,15 +1,16 @@
 # Example: override the bundle defaults in the profile's own cordis.patch.yml.
 #
-# A matching row id replaces the bundle's `config` wholesale, so copy the
-# whole object you want to keep. This example filters gemini only, keeps the
-# real paths visible, and disables tool renaming (the default anyway).
-#
-# After editing the profile patch, restart DSH (or reload the plugin row).
+# A matching row id replaces the bundle's `config` wholesale, so copy the whole
+# object you want to keep. This example filters gemini only, keeps the real
+# paths visible, and shows the two rewrite classes side by side:
+#   - stripLines / replace: outbound only, never restored
+#   - nameMap: outbound rename + inbound restore (never put these in replace)
 - id: dsh-prompt-filter
   config:
+    sidebarEntry: true
     enabled: true
     dryRun: false
-    debug: true
+    debug: false
     applyToSubagents: true
     traceDir: ''
     rules:
@@ -17,57 +18,31 @@
         modelMatch:
           - gemini
         identityOverride: You are a helpful coding assistant.
+        skillToolName: skill
         noRetryOn:
           - Resource has been exhausted
-          - RATE_LIMIT
         scope:
           system: true
           toolDescriptions: true
-          toolNames: false
+          toolNames: true
           memoryReminders: true
           paths: false
+          skillCatalog: true
         stripLines:
-          - pattern: You are an AI agent powered by DeepSeek Harness.
-          - pattern: The runtime context names the DeepSeek Harness implementation checkout.
-            mode: paragraph
-          - pattern: You are interacting with the user through the DeepSeek Harness Web GUI
-            mode: paragraph
-          - pattern: 'Current DeepSeek Harness implementation checkout:'
-          - pattern: 'Current DeepSeek Harness Web GUI URL:'
-          - pattern: The session workspace
-          - pattern: 'also includes these source folders:'
-          - pattern: github.com/ranxianglei/billion-context
-            mode: paragraph
-          - pattern: '^\s*You are a coding agent powered by the .+ model\.\s*$'
+          - pattern: '^\s*You are an AI agent,? powered by .+\.\s*$'
             regex: true
+          - pattern: 'You are interacting with the user through the .* Web GUI'
+            mode: paragraph
         replace:
-          - from: 'window.__DSH_BOOT__'
-            to: the app boot payload
-          - from: 'Current DSH file policy:'
-            to: 'Current file policy:'
-          - from: enforced by the DSH file sandbox
-            to: enforced by the file sandbox
-          - from: The DSH file sandbox does not restrict
-            to: The file sandbox does not restrict
-          - from: DSH session cwd
-            to: session cwd
-          - from: dsh web
-            to: the app
-          - from: DeepSeek Harness
-            to: the agent
-          - from: Harness
-            to: agent
-          - from: ACP
-            to: cross-session
-          - from: billion-context
-            to: context-compaction
           - from: deepseek-tools
             to: search-tools
           - from: deepseek-official
             to: search-official
-          - from: '(?<![A-Za-z0-9])DSH(?![A-Za-z0-9])'
-            to: APP
-            regex: true
-          - from: '(?<![A-Za-z0-9])dsh(?![A-Za-z0-9])'
-            to: app
-            regex: true
+          - from: DeepSeek Harness
+            to: the agent
+        nameMap:
+          tools:
+            ops_bash: run_bash
+            ops_grep: search_text
+          skills:
+            dsh-badge: assistant-badge

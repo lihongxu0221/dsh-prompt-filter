@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Prompt Filter",
-    "description": "Strips harness identity from requests sent to selected models, including tool descriptions, and stops identical retries."
+    "description": "Rewrites DeepSeek Harness identity text out of model requests and renames tool and skill identifiers outbound, restoring them in responses."
   }
 }

@@ -53,7 +53,7 @@ function configOf(overrides = {}) {
       modelMatch: ['gemini'],
       noRetryOn: ['Resource has been exhausted', 'RATE_LIMIT'],
       replace: [],
-      stripLines: ['You are an AI agent powered by DeepSeek Harness.'],
+      stripLines: [{ pattern: 'You are an AI agent', regex: true }],
       ...overrides,
     }],
   }

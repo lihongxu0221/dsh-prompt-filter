@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "提示词过滤器",
-    "description": "在请求发送前为指定模型剥离 Harness 身份信息（含工具描述），并阻止相同请求体的无谓重试。"
+    "description": "按模型匹配重写请求中的 DeepSeek Harness 身份文本，并把工具名与技能 id 出站改名、入站还原。"
   }
 }
