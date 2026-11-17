@@ -414,7 +414,7 @@ git push --follow-tags
 | README 含功能/安装/两类配置示例/核对方法/兼容版本 | ✅ |
 | awesome-dsh-plugin 条目草稿 `data/plugins/lihongxu0221__dsh-prompt-filter.yml` | ✅ |
 | 界面截图清单 | ✅ `screenshots/README.md`（2 张：主面板配置、侧栏入口） |
-| 首个 Release（含无版本号 `.tgz` 与校验和） | ✅（最新为 `v0.3.3`，附件 `dsh-prompt-filter.tgz` / `dsh-prompt-filter-0.3.3.tgz` / `SHA256SUMS`） |
+| 首个 Release（含无版本号 `.tgz` 与校验和） | ✅（最新为 `v0.3.4`，附件 `dsh-prompt-filter.tgz` / `dsh-prompt-filter-0.3.4.tgz` / `SHA256SUMS`） |
 | 仓库创建满 1 天后提交 PR | ⬜ 需等待满 1 天（提交 PR 前确认） |
 
 提交 awesome-dsh-plugin PR 时只新增 `data/plugins/lihongxu0221__dsh-prompt-filter.yml`，不要改对方的 README；收录规则以当时最新的 awesome-dsh-plugin 贡献指南与 dsh-market `CONTRIBUTING.md` 为准。
