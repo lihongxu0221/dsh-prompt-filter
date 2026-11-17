@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.4] - 2026-11-17
+
+### Fixed
+
+- `toolNameResolver` now refuses a fallback rename whose target is already a
+  declared tool name. History-only declarations have no collision check of
+  their own, so a plain `ops_bash → run_bash` map could previously shadow a
+  real tool named `run_bash`; declared tools keep priority.
+
 ## [0.3.3] - 2026-11-17
 
 ### Added

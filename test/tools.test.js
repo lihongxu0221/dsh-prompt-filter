@@ -3,7 +3,7 @@ import test from 'node:test'
 
 import { FALLBACK_RULES } from '../lib/config.js'
 import { compileRule } from '../lib/rule.js'
-import { filterTools } from '../lib/tools.js'
+import { filterTools, toolNameResolver } from '../lib/tools.js'
 import { TOOLS, forbiddenHits } from './fixture.js'
 
 const rule = compileRule(FALLBACK_RULES[0], 0)
@@ -71,4 +71,11 @@ test('unfiltered tool arrays return unchanged', () => {
   const result = filterTools(TOOLS, compileRule(plain, 0))
   assert.equal(result.changed, false)
   assert.equal(result.tools, TOOLS)
+})
+test('history-only renames do not shadow a declared tool name', () => {
+  const mapped = compileRule(FALLBACK_RULES[0], 0)
+  const declared = filterTools([{ name: 'run_bash', description: 'existing', parameters: {} }], mapped)
+  const resolve = toolNameResolver(mapped, declared.nameMap, declared.declared)
+  assert.equal(resolve('ops_bash'), 'ops_bash')
+  assert.equal(resolve('ops_grep'), 'search_text')
 })
