@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.5] - 2026-11-19
+
+### Compatibility
+
+- Verified compatibility with DeepSeek Harness `2e39e70496aa02986ca6a820c5d497e816b69d7e` (0.2.2-rc.5): the `llm/stream`, `GenerateOptions` (`messages`, `tools`, `toolHistory`), `projectToolUpdates`/`toolDeclarations`, `agent/request-error`/retry, `settings.configure`, volatile-update, and existing settings/sidebar slot contracts remain compatible.
+- Retested the existing `sidebar.panellist` registration against the additive `sidebar.panel.trailing`/`sidebar.panellist.trailing` slots; no plugin code change is required because the plugin does not consume the new optional slot.
+- No compatibility changes were required beyond the release metadata bump.
+
 ## [0.3.4] - 2026-11-17
 
 ### Fixed
