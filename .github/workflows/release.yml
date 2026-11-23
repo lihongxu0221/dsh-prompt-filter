@@ -41,8 +41,10 @@ jobs:
         id: pack
         run: |
           mkdir -p dist
-          npm pack --pack-destination dist
+          packed=$(npm pack --pack-destination dist --json | node -pe "JSON.parse(require('fs').readFileSync(0, 'utf8'))[0].filename")
           version=$(node -p "require('./package.json').version")
+          cp "dist/${packed}" "dist/dsh-prompt-filter-${version}.tgz"
+          rm "dist/${packed}"
           cp "dist/dsh-prompt-filter-${version}.tgz" dist/dsh-prompt-filter.tgz
           (cd dist && sha256sum dsh-prompt-filter.tgz "dsh-prompt-filter-${version}.tgz" > SHA256SUMS)
           echo "version=${version}" >> "$GITHUB_OUTPUT"

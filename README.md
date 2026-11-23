@@ -14,8 +14,8 @@
 
 | 项 | 值 |
 | --- | --- |
-| 开发/验证基线 | DSH `0.2.2-rc.3` |
-| 源码提交 | `39163dd30f703a79079e2d2446545cff3c453738`（2026-11-13，`deepseek-ai/deepseek-harness`） |
+| 开发/验证基线 | DSH `0.2.3-alpha.2` |
+| 源码提交 | `4b399c39a6d1479cd84ca591b4d7c88e24d38a96`（`deepseek-ai/deepseek-harness` master） |
 | 源码目录 | `E:\AI\Agents\Deepseek Harness\Code` |
 | 插件目录 | `E:\AI\Agents\Deepseek Harness\DSH\dsh-prompt-filter` |
 | 运行时 | 应用自带 node 24.21.0；本机 PATH 上的 node 26.4.0 也可跑单测 |
@@ -34,9 +34,9 @@ v0.2.0 的界面部分（`client.js`）由 `node --test` 的假 React/槽位测�
 - `agent/pre-step` 只能替换被接收的消息，不能改 assembly 或工具集。
 - `llm/stream` 的 `next()` 不接受参数，不能“替换参数后继续”；本插件把请求浅拷贝成可变对象，再通过 `ctx.llm.stream(clone)` 重新派发，并用 `WeakSet` 防止递归。
 
-监听器以 `prepend: true` 注册，因此重新派发时其余 `llm/stream` 监听器（billion-context 等）只会在内层执行一次，不会被跑两遍。
+监听器以 `prepend: true` 注册，因此在通常的“本插件最外层”顺序下，重新派发时其余 `llm/stream` 监听器（billion-context 等）会在内层执行。Cordis 的多个 `prepend` 监听器按后注册者优先；若另一个 prepend 监听器位于本插件外层，它可能先看到未过滤请求，或在嵌套派发中再次执行。
 
-已知限制：DSH 的 `isAgentLoopRequest` 用 `WeakSet` 按**对象身份**判断，而插件发出的是浅拷贝，标记不会跟随。上游唯一的生产消费者是 `session-title`（`packages/session/session-title/src/index.ts`），所以**被过滤模型的会话不再自动生成标题**；其余功能不受影响。上游没有提供可写的请求装配钩子，这是「重写请求」的固有代价，不做 hack 绕过。
+已知限制：DSH 的 `isAgentLoopRequest` 用 `WeakSet` 按**对象身份**判断，而插件发出的是浅拷贝，标记不会跟随。上游唯一的生产消费者是 `session-title`（`packages/session/session-title/src/index.ts`），所以**被过滤模型的会话不再自动生成标题**；其余功能不受影响。上游没有提供可写的请求装配钩子，这是「重写请求」的固有代价，不做 hack 绕过。当前上游验证基线为 `4b399c39a6d1479cd84ca591b4d7c88e24d38a96`（`dsh-v0.2.3-alpha.2`）。
 
 重试方面：`dsh-llm-retry` 在 normal 模式下对 `RATE_LIMIT` 会直接排定退避并返回 `{kind:'retry'}`，不会调用下游监听器。因此“相同请求体不再重试”的否决必须注册在它之前（同样 `prepend: true`），命中 `noRetryOn` 时返回 `undefined` 且不调用 `next()`，让本轮直接失败。
 
@@ -380,7 +380,7 @@ MIT License，见 [LICENSE](./LICENSE)。插件无运行时第三方依赖（`@d
 | 方式 | 命令 |
 | --- | --- |
 | 本地目录链接（开发） | `dsh plugin --profile desktop add "E:/AI/Agents/Deepseek Harness/DSH/dsh-prompt-filter"` |
-| npm 预构建包 | `dsh plugin --profile desktop add dsh-prompt-filter` |
+| npm 预构建包 | `dsh plugin --profile desktop add @deepseek-ai/dsh-prompt-filter` |
 | Release tarball | 从 GitHub Release 下载 `dsh-prompt-filter.tgz`，再 `dsh plugin --profile desktop add ./dsh-prompt-filter.tgz` |
 
 ### 13.2 自动发版（GitHub Actions）

@@ -13,6 +13,8 @@ beforeEach(() => resetSessionModels())
 test('the model seen on llm/stream is remembered per session', () => {
   recordModel('s1', 'magpie', 'group/gemini-3.8-flash')
   assert.deepEqual(modelForSession('s1'), { provider: 'magpie', model: 'group/gemini-3.8-flash' })
+  assert.deepEqual(modelForSession('s1', 'magpie'), { provider: 'magpie', model: 'group/gemini-3.8-flash' })
+  assert.equal(modelForSession('s1', 'other-provider'), undefined)
   assert.equal(modelForSession('missing'), undefined)
   assert.equal(modelForSession(undefined), undefined)
 })

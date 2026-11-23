@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [0.3.6] - 2026-11-24
+
+### Compatibility
+
+- Package metadata now uses the requested scoped identity `@deepseek-ai/dsh-prompt-filter`; the Cordis bundle id remains `dsh-prompt-filter` so existing profile rows and settings namespaces continue to resolve.
+- Revalidated against DeepSeek Harness `4b399c39a6d1479cd84ca591b4d7c88e24d38a96` (`0.2.3-alpha.2`): `llm/stream`, `GenerateOptions` (`messages`, `tools`, `toolHistory`), `projectToolUpdates`/`toolDeclarations`, StreamChunk variants, `agent/request-error`/retry, loader volatile updates, `settings.configure`, and the existing client slot contracts remain compatible.
+- The `agent/request-error` listener now validates the upstream `provider` payload against the cached outgoing request before applying `noRetryOn`, while still accepting older payloads that omit `provider`.
+- Confirmed that the upstream image-budget and prompt-assembly changes do not alter the request fields or stream contracts used by this plugin. Unknown message content blocks remain preserved during filtering.
+- The client now honors `ConfigFormSnapshot.writable`: read-only forms show a notice and disable editing/saving instead of attempting a rejected mutation.
+- The nested `llm/stream` redispatch and object-identity limitation for `isAgentLoopRequest` remain documented; upstream provides no writable request-assembly hook.
+
 ## [0.3.5] - 2026-11-19
 
 ### Compatibility

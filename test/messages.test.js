@@ -66,6 +66,18 @@ test('tool names are only rewritten when a rename map exists', () => {
   assert.equal(untouched.changed, false)
 })
 
+test('unknown content blocks survive a filtered message unchanged', () => {
+  const extensionBlock = { type: 'future-plugin-block', payload: { keep: true } }
+  const result = filterMessages([{
+    role: 'system',
+    id: 'x',
+    content: [extensionBlock, { type: 'text', text: 'DeepSeek Harness identity' }],
+  }], rule, new Map())
+  assert.equal(result.changed, true)
+  assert.equal(result.messages[0].content[0], extensionBlock)
+  assert.equal(result.messages[0].content[0].payload.keep, true)
+})
+
 test('messages without content do not crash the filter', () => {
   const result = filterMessages([{ role: 'system', id: 'x' }], rule, new Map())
   assert.equal(result.changed, false)

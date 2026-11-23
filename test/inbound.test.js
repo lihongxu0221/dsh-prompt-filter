@@ -75,11 +75,18 @@ test('skill ids inside block-end arguments are restored', async () => {
 test('unmapped names and other chunks pass through untouched', async () => {
   const chunks = [
     { type: 'text-delta', index: 0, text: 'hello' },
+    { type: 'usage', inputTokens: 1, outputTokens: 2 },
+    { type: 'future-plugin-chunk', payload: { keep: true } },
     { type: 'tool-call-delta', index: 0, id: 'c4', name: 'free_search', argumentsDelta: '{}' },
     { type: 'block-end', index: 0, block: { type: 'tool-call', id: 'c4', name: 'free_search', arguments: '{}' } },
+    { type: 'finish', reason: { kind: 'stop' }, replayState: { token: 'r1' } },
   ]
   const out = await collect(chunks)
   assert.equal(out[0], chunks[0])
   assert.equal(out[1], chunks[1])
-  assert.deepEqual(out[2], chunks[2])
+  assert.equal(out[2], chunks[2])
+  assert.equal(out[2].payload.keep, true)
+  assert.equal(out[3], chunks[3])
+  assert.deepEqual(out[4], chunks[4])
+  assert.deepEqual(out[5], chunks[5])
 })

@@ -104,6 +104,7 @@ window.__ModuleLoader__.load({
         loading: '正在读取配置…',
         unavailable: '当前 profile 没有为这个插件提供配置表单。',
         notice: '提示',
+        readOnly: '当前配置表单为只读，无法保存改动。',
         commandDescription: '打开提示词过滤器 / Open Prompt Filter',
       },
       en: {
@@ -144,6 +145,7 @@ window.__ModuleLoader__.load({
         loading: 'Reading configuration…',
         unavailable: 'This profile does not serve a configuration form for this plugin.',
         notice: 'Notice',
+        readOnly: 'This configuration form is read-only; changes cannot be saved.',
         commandDescription: 'Open Prompt Filter',
       },
     }
@@ -292,6 +294,7 @@ window.__ModuleLoader__.load({
 
       const status = snap && snap.status ? snap.status : 'unavailable'
       const value = status === 'ready' && snap.value && typeof snap.value === 'object' ? snap.value : undefined
+      const writable = value && snap.writable !== false
       const revision = snap ? snap.revision : undefined
 
       useEffect(() => {
@@ -311,7 +314,7 @@ window.__ModuleLoader__.load({
       const setField = (field, next) => setDraft(current => (current ? { ...current, [field]: next } : current))
 
       const save = async () => {
-        if (!value || !draft) return
+        if (!value || !draft || !writable) return
         const mutate = form && typeof form.mutate === 'function' ? (ops, rev) => form.mutate(ops, rev) : mutateFallback
         if (typeof mutate !== 'function') {
           setError(t('unavailable'))
@@ -380,7 +383,7 @@ window.__ModuleLoader__.load({
           h(Checkbox, {
             checked: draft ? draft[field] === true : value[field] === true,
             label: t(labelKey),
-            disabled: busy,
+            disabled: busy || !writable,
             onChange: next => setField(field, next),
           }),
           h('div', { style: S.hint }, t(hintKey)),
@@ -389,13 +392,14 @@ window.__ModuleLoader__.load({
       return h(
         'div',
         { style: S.card },
+        !writable ? h('div', { style: S.hint }, t('readOnly')) : null,
         h(
           'div',
           { style: S.group },
           h('div', { style: S.label }, t('fieldTraceDir')),
           h(Input, {
             value: draft ? draft.traceDir : '',
-            disabled: busy,
+            disabled: busy || !writable,
             placeholder: 'DSH_HOME/dsh-prompt-filter/trace',
             onChange: event => setField('traceDir', event.target.value),
             style: { width: '100%' },
@@ -414,7 +418,7 @@ window.__ModuleLoader__.load({
           h('div', { style: S.hint }, t('rulesHint')),
           h('textarea', {
             value: rulesText,
-            disabled: busy,
+            disabled: busy || !writable,
             spellCheck: false,
             rows: Math.min(24, Math.max(6, rulesText.split('\n').length)),
             onChange: event => setRulesText(event.target.value),
@@ -429,7 +433,11 @@ window.__ModuleLoader__.load({
           surface === 'row' || surface === 'bundle'
             ? h(Button, { variant: 'outline', size: 'sm', onClick: () => openPanel(ctx) }, t('openPanel'))
             : null,
-          h(Button, { variant: 'primary', size: 'sm', disabled: busy, onClick: save }, busy ? t('saving') : t('save')),
+          h(
+            Button,
+            { variant: 'primary', size: 'sm', disabled: busy || !writable, onClick: save },
+            busy ? t('saving') : t('save'),
+          ),
         ),
       )
     }

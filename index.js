@@ -256,7 +256,10 @@ export function apply(ctx, rawConfig) {
     const session = payload?.agent?.session
     if (!config.applyToSubagents && isSubagentHeader(session?.header)) return next()
 
-    const info = modelForSession(session?.id)
+    // Newer runtimes include provider in the request-error payload. Validate it
+    // against the cached outgoing request, while accepting older payloads that
+    // omit the field for backward compatibility.
+    const info = modelForSession(session?.id, payload?.provider)
     if (info === undefined) return next()
 
     const rule = current.rules.find((candidate) => matchModel(candidate.matchers, info))

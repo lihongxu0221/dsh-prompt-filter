@@ -151,6 +151,7 @@ test('the noRetryOn veto stops identical retries for the matching model', () => 
 
   const payload = {
     agent: { session: { id: 'session-1', header: { isSeeded: true } } },
+    provider: 'magpie',
     failure: { code: 'RATE_LIMIT', status: 429, message: 'Resource has been exhausted (e.g. check quota).' },
   }
   let nextCalls = 0
@@ -161,6 +162,10 @@ test('the noRetryOn veto stops identical retries for the matching model', () => 
   const unrelated = { ...payload, failure: { code: 'SERVER', message: 'bad gateway' } }
   veto.listener(unrelated, () => { nextCalls += 1 })
   assert.equal(nextCalls, 1)
+
+  const differentProvider = { ...payload, provider: 'other-provider' }
+  veto.listener(differentProvider, () => { nextCalls += 1 })
+  assert.equal(nextCalls, 2, 'a stale session cache must not veto a different provider')
 })
 
 test('applyToSubagents false lets a subagent retry normally', () => {

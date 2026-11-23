@@ -33,6 +33,25 @@ const primitivesStub = {
   Input: props => ReactStub.createElement('input', props),
 }
 
+function renderTree(node) {
+  if (node === null || node === undefined || typeof node !== 'object') return node
+  if (typeof node.type === 'function') return renderTree(node.type(node.props || {}))
+  return {
+    ...node,
+    children: (node.children || []).flatMap(child => {
+      const rendered = renderTree(child)
+      return rendered === undefined || rendered === null ? [] : [rendered]
+    }),
+  }
+}
+
+function collectNodes(node, predicate, output = []) {
+  if (!node || typeof node !== 'object') return output
+  if (predicate(node)) output.push(node)
+  for (const child of node.children || []) collectNodes(child, predicate, output)
+  return output
+}
+
 function makeCtx(services) {
   const slots = []
   const disposals = []
@@ -69,10 +88,10 @@ function makeCtx(services) {
   return { ctx, slots, slotInjections, contextInjections }
 }
 
-function readyForm(value) {
+function readyForm(value, writable = true) {
   const listeners = new Set()
   const form = {
-    getSnapshot: () => ({ status: 'ready', value, revision: 1, writable: true }),
+    getSnapshot: () => ({ status: 'ready', value, revision: 1, writable }),
     subscribe(listener) {
       listeners.add(listener)
       return () => listeners.delete(listener)
@@ -152,6 +171,22 @@ test('the sidebar entry follows the persisted setting and the command still open
   command.ui.run()
   assert.deepEqual(selected, ['dsh-prompt-filter'])
 })
+test('read-only config snapshots disable editing and saving', () => {
+  const definition = loadClientModule()
+  const plugin = definition.factory(name => (name === 'react' ? ReactStub : primitivesStub))
+  const { form } = readyForm({ sidebarEntry: true, enabled: true, rules: [] }, false)
+  const { ctx, slots, slotInjections } = makeCtx({ configForms: { get: () => form } })
+  plugin.apply(ctx)
+
+  const mainInjection = slotInjections.find(injection => injection.name === 'main')
+  mainInjection.callback()
+  const panel = renderTree(slots.find(entry => entry.options.name === 'main').component())
+  const controls = collectNodes(panel, node => ['input', 'textarea', 'button'].includes(node.type))
+  assert.ok(controls.length > 0)
+  assert.ok(controls.every(node => node.props.disabled === true))
+  assert.match(JSON.stringify(panel), /read-only; changes cannot be saved/)
+})
+
 test('a live sidebarEntry change registers and removes the entry', () => {
   const definition = loadClientModule()
   const plugin = definition.factory(name => (name === 'react' ? ReactStub : primitivesStub))
