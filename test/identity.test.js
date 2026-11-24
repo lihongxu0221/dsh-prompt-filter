@@ -110,7 +110,7 @@ function resolveFrom(parent, specifier) {
   return JSON.parse(output)
 }
 
-test('the shipped bundle imports the official package name and keeps the row id', () => {
+test('the shipped bundle registers the scoped package name and keeps the row id', () => {
   const pkg = readJson(join(root, 'package.json'))
   assert.equal(pkg.name, PACKAGE_NAME)
   assert.equal(pkg.icon, undefined)
@@ -126,7 +126,7 @@ test('the shipped bundle imports the official package name and keeps the row id'
   const index = readFileSync(join(root, 'index.js'), 'utf8')
   const client = readFileSync(join(root, 'client.js'), 'utf8')
   assert.match(index, /export const name = 'dsh-prompt-filter'/)
-  assert.match(client, /id: 'dsh-prompt-filter'/)
+  assert.match(client, /id: '@deepseek-ai\/dsh-prompt-filter'/)
 })
 
 test('install examples name the scoped package and do not add a bare alias', () => {

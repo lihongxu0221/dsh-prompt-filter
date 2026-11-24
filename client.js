@@ -12,7 +12,7 @@
 // `form.mutate(...)`, so edits land in the profile's Cordis patch and take
 // effect without a restart.
 window.__ModuleLoader__.load({
-  id: 'dsh-prompt-filter',
+  id: '@deepseek-ai/dsh-prompt-filter',
   factory(require) {
     'use strict'
 
@@ -20,12 +20,16 @@ window.__ModuleLoader__.load({
     const h = React.createElement
     const { useEffect, useState } = React
 
-    /** Profile entry id: patch row id, settings namespace and slot keys all use it. */
+    /**
+     * Profile entry id: the patch row id and the settings namespace both use it.
+     * The row's `name` is the scoped package name, so bundle-level slot keys use
+     * the package name while row-level keys pair it with this entry id.
+     */
     const NS = 'dsh-prompt-filter'
     const PANEL_ID = 'dsh-prompt-filter'
     const SECTION_ID = 'dsh-prompt-filter'
-    const ROW_KEY = 'dsh-prompt-filter#dsh-prompt-filter'
-    const BUNDLE_KEY = 'dsh-prompt-filter'
+    const ROW_KEY = '@deepseek-ai/dsh-prompt-filter#dsh-prompt-filter'
+    const BUNDLE_KEY = '@deepseek-ai/dsh-prompt-filter'
     const BOOLEAN_FIELDS = ['sidebarEntry', 'enabled', 'dryRun', 'debug', 'applyToSubagents']
 
     let primitives = {}

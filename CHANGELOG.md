@@ -10,6 +10,13 @@ All notable changes to this project are documented here. The format follows
 
 - The shipped bundle module name is now `@deepseek-ai/dsh-prompt-filter`, the same identity as `package.json`. The Cordis row id stays `dsh-prompt-filter`. Activation was importing the bare name `dsh-prompt-filter` (`ERR_MODULE_NOT_FOUND` against a scoped install). A same-commit bare alias made the import resolve, then icon metadata rejected `icon.svg` because the nearest `package.json` name did not match that specifier. Enabling reapplies this patch, so a profile `name` edited by hand no longer gets rewritten to the bare specifier. The `./icon` export remains the icon entry; no manifest `icon` field is added.
 
+## [0.3.7] - 2026-11-24
+
+### Fixed
+
+- The browser bundle now registers under the scoped package name `@deepseek-ai/dsh-prompt-filter`, which the host's client-module table uses as the entry id (`packages/client/modules/src/index.ts`: `graphRow(packageName, ...)`; `client/system.ts` `arrive()` requires `factories.has(id)`). Registering the narrow `dsh-prompt-filter` made the whole client entry fail to load with `client-modules: ... loaded without registering "dsh-prompt-filter"`, so the settings section, the plugin-page config cards, the sidebar entry and `/prompt-filter` all disappeared while host-side filtering kept working.
+- Plugin-page slot keys now follow the shipped identity: `plugins.row.config` uses `@deepseek-ai/dsh-prompt-filter#dsh-prompt-filter` and `plugins.bundle.config` uses `@deepseek-ai/dsh-prompt-filter`. The Cordis row id and settings namespace remain `dsh-prompt-filter`.
+
 ## [0.3.6] - 2026-11-24
 
 ### Compatibility
