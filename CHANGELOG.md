@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- The shipped bundle module name is now `@deepseek-ai/dsh-prompt-filter`, the same identity as `package.json`. The Cordis row id stays `dsh-prompt-filter`. Activation was importing the bare name `dsh-prompt-filter` (`ERR_MODULE_NOT_FOUND` against a scoped install). A same-commit bare alias made the import resolve, then icon metadata rejected `icon.svg` because the nearest `package.json` name did not match that specifier. Enabling reapplies this patch, so a profile `name` edited by hand no longer gets rewritten to the bare specifier. The `./icon` export remains the icon entry; no manifest `icon` field is added.
+
 ## [0.3.6] - 2026-11-24
 
 ### Compatibility

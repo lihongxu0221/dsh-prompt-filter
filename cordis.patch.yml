@@ -15,7 +15,12 @@
 # profile without this bundle) while the GUI entries stay available.
 - insert:
     - id: dsh-prompt-filter
-      name: dsh-prompt-filter
+      # Module specifier imported at activation. It must stay equal to
+      # package.json "name": a bare alias is a different install, and icon
+      # metadata rejects an export whose nearest package.json name differs
+      # from this specifier. The row id above is the stable profile and
+      # settings identity; enabling reapplies this patch and overwrites name.
+      name: '@deepseek-ai/dsh-prompt-filter'
       config:
         # Show the panel icon in the left sidebar. Turning it off only drops
         # the sidebar entry: `/prompt-filter`, the plugin page, and the

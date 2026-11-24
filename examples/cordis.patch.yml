@@ -1,7 +1,9 @@
 # Example: override the bundle defaults in the profile's own cordis.patch.yml.
 #
 # A matching row id replaces the bundle's `config` wholesale, so copy the whole
-# object you want to keep. This example filters gemini only, keeps the real
+# object you want to keep. Leave `name` unset: the shipped patch owns it and
+# sets `name: '@deepseek-ai/dsh-prompt-filter'`. Do not set `name: dsh-prompt-filter`.
+# This example filters gemini only, keeps the real
 # paths visible, and shows the two rewrite classes side by side:
 #   - stripLines / replace: outbound only, never restored
 #   - nameMap: outbound rename + inbound restore (never put these in replace)
