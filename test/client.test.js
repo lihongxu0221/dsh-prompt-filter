@@ -103,7 +103,7 @@ function readyForm(value, writable = true) {
 
 test('client.js registers the panel, settings page, config cards, and command', () => {
   const definition = loadClientModule()
-  assert.equal(definition.id, '@deepseek-ai/dsh-prompt-filter')
+  assert.equal(definition.id, '@lihongxu0221/dsh-prompt-filter')
   const plugin = definition.factory(name => (name === 'react' ? ReactStub : primitivesStub))
   assert.deepEqual(plugin.inject, ['slots'])
   assert.equal(typeof plugin.apply, 'function')
@@ -125,8 +125,8 @@ test('client.js registers the panel, settings page, config cards, and command', 
   const registered = name => slots.filter(entry => entry.options.name === name)
   assert.equal(registered('main')[0].options.key, 'dsh-prompt-filter')
   assert.equal(registered('settings.section')[0].options.id, 'dsh-prompt-filter')
-  assert.equal(registered('plugins.row.config')[0].options.key, '@deepseek-ai/dsh-prompt-filter#dsh-prompt-filter')
-  assert.equal(registered('plugins.bundle.config')[0].options.key, '@deepseek-ai/dsh-prompt-filter')
+  assert.equal(registered('plugins.row.config')[0].options.key, '@lihongxu0221/dsh-prompt-filter#dsh-prompt-filter')
+  assert.equal(registered('plugins.bundle.config')[0].options.key, '@lihongxu0221/dsh-prompt-filter')
   // Sidebar entry defaults to on while no configuration form is served.
   assert.equal(registered('sidebar.panellist').length, 1)
 

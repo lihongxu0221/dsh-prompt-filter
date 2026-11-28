@@ -2,7 +2,7 @@
 #
 # A matching row id replaces the bundle's `config` wholesale, so copy the whole
 # object you want to keep. Leave `name` unset: the shipped patch owns it and
-# sets `name: '@deepseek-ai/dsh-prompt-filter'`. Do not set `name: dsh-prompt-filter`.
+# sets `name: '@lihongxu0221/dsh-prompt-filter'`. Do not set `name: dsh-prompt-filter`.
 # This example filters gemini only, keeps the real
 # paths visible, and shows the two rewrite classes side by side:
 #   - stripLines / replace: outbound only, never restored

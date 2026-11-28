@@ -1,6 +1,6 @@
 {
-  "name": "@deepseek-ai/dsh-prompt-filter",
-  "version": "0.3.7",
+  "name": "@lihongxu0221/dsh-prompt-filter",
+  "version": "0.4.0",
   "description": "Rewrites DeepSeek Harness identity text out of requests sent to selected models (gemini, claude) and renames tool and skill identifiers outbound while restoring the original names in model responses.",
   "type": "module",
   "main": "index.js",

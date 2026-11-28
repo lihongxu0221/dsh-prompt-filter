@@ -12,7 +12,7 @@
 // `form.mutate(...)`, so edits land in the profile's Cordis patch and take
 // effect without a restart.
 window.__ModuleLoader__.load({
-  id: '@deepseek-ai/dsh-prompt-filter',
+  id: '@lihongxu0221/dsh-prompt-filter',
   factory(require) {
     'use strict'
 
@@ -28,8 +28,8 @@ window.__ModuleLoader__.load({
     const NS = 'dsh-prompt-filter'
     const PANEL_ID = 'dsh-prompt-filter'
     const SECTION_ID = 'dsh-prompt-filter'
-    const ROW_KEY = '@deepseek-ai/dsh-prompt-filter#dsh-prompt-filter'
-    const BUNDLE_KEY = '@deepseek-ai/dsh-prompt-filter'
+    const ROW_KEY = '@lihongxu0221/dsh-prompt-filter#dsh-prompt-filter'
+    const BUNDLE_KEY = '@lihongxu0221/dsh-prompt-filter'
     const BOOLEAN_FIELDS = ['sidebarEntry', 'enabled', 'dryRun', 'debug', 'applyToSubagents']
 
     let primitives = {}

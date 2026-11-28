@@ -6,9 +6,25 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-25
+
+### Changed
+
+- Renamed the npm package scope from `@deepseek-ai/dsh-prompt-filter` to the author-owned scope `@lihongxu0221/dsh-prompt-filter` across `package.json`, `cordis.patch.yml`, `client.js` (module registration id, `plugins.row.config` key `@lihongxu0221/dsh-prompt-filter#dsh-prompt-filter`, and `plugins.bundle.config` key `@lihongxu0221/dsh-prompt-filter`), tests, and documentation. The Cordis row id (`dsh-prompt-filter`), host plugin `name`, and settings namespace remain unchanged.
+
 ### Fixed
 
-- The shipped bundle module name is now `@deepseek-ai/dsh-prompt-filter`, the same identity as `package.json`. The Cordis row id stays `dsh-prompt-filter`. Activation was importing the bare name `dsh-prompt-filter` (`ERR_MODULE_NOT_FOUND` against a scoped install). A same-commit bare alias made the import resolve, then icon metadata rejected `icon.svg` because the nearest `package.json` name did not match that specifier. Enabling reapplies this patch, so a profile `name` edited by hand no longer gets rewritten to the bare specifier. The `./icon` export remains the icon entry; no manifest `icon` field is added.
+- The shipped bundle module name in `cordis.patch.yml` now matches `package.json` (`@lihongxu0221/dsh-prompt-filter`), while the Cordis row id stays `dsh-prompt-filter`. Activation previously imported the bare name `dsh-prompt-filter` (`ERR_MODULE_NOT_FOUND` against a scoped install). A same-commit bare alias made the import resolve, then icon metadata rejected `icon.svg` because the nearest `package.json` name did not match that specifier. Enabling reapplies this patch, so a profile `name` edited by hand no longer gets rewritten to the bare specifier. The `./icon` export remains the icon entry; no manifest `icon` field is added.
+
+### Compatibility
+
+- Revalidated against DeepSeek Harness `841f76d3c51966375ebed9b25512ebce4ac02079` (`0.2.3-alpha.3`), 1150 commits ahead of the previous baseline `4b399c39a6d1479cd84ca591b4d7c88e24d38a96` (`0.2.3-alpha.2`); no plugin code change was required for this sync.
+- `llm/stream` (`packages/llm/llm/src/index.ts:78`), `GenerateOptions` (`messages`, `tools`, `toolHistory`, `sessionId`, `signal`), the `StreamChunk` variants (`tool-call-delta`, `block-end`, `finish`), and `projectToolUpdates`/`toolDeclarations` are unchanged between the two baselines: `packages/llm/llm/src/types.ts` and `content.ts` have no diff at all. The request body assembled in `packages/core/agent-loop/src/agent.ts` is also identical, so the plugin keeps receiving the system prompt as a `role: 'system'` message rather than a `system` field.
+- The one new failure code, `INVALID_TOOL_ARGUMENTS` (`packages/llm/llm/src/error.ts`, added to `DEFAULT_RETRYABLE_CODES` in `retry-policy.ts`), reaches `matchesNoRetry` as one more `code` value to match against; `llm-retry` itself is untouched, so the retry decision order is unchanged. The `agent/request-error` payload still carries `{ turn, step, provider, failure, retryPolicy, signal }` with `agent` fused in by the dispatcher, so the listener's `payload?.agent?.session` lookup still resolves.
+- `SessionHeader.origin` widened from `'subagent'` to `'subagent' | 'side'`; `isSubagentHeader` already rejects every origin other than `'subagent'`, so side sessions stay outside filtering without a change.
+- Client side: `sidebar.panellist`, `main`, `settings.section`, `settings.section.icon`, `plugins.row.config` and `plugins.bundle.config`, plus the `configForms`, `commandUi` and `locale` services, keep their names and registration signatures. `@deepseek-ai/dsh-client-ui-slots`, `-ui-primitives` and `-ui-dockkit` moved their sources under `src/client/` and became `immediately: true` client bundles instead of shell-seeded platform modules; the module loader still resolves them by package id, and the existing `try`/`catch` fallback in `client.js` covers a profile where ui-primitives is missing. The new `settings.general.group` subtree and the `PluginTabProps.page` helpers are additive and unused here.
+- `settings.configure(presentation, owner)` and the `cordis.patch.yml` `PatchOptions` shape are unchanged; `vendor/loader` and `vendor/cordis` only bumped their package versions, so `prepend`/`waterfall` and `loader/volatile-update` behave as before. `@deepseek-ai/schemastery` moved to `3.20.0-alpha.2`, still inside the declared `>=3.18.4 <4` peer range.
+- Default `nameMap` targets were re-checked against the new tree: every tool and skill name the plugin renames still exists under that name, including `plugin_manager` (`packages/boot/plugin-manager/src/tools.ts:88`) and the `skill` tool (`packages/skill/tool-skill/src/index.ts:94`). The upstream office-tool rename to `document_*` does not touch the defaults.
 
 ## [0.3.7] - 2026-11-24
 

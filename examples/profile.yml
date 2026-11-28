@@ -6,21 +6,21 @@
 # want to tune the rules.
 #
 # The dependency and the bundle module name are both
-# `@deepseek-ai/dsh-prompt-filter`. The row id stays `dsh-prompt-filter`.
+# `@lihongxu0221/dsh-prompt-filter`. The row id stays `dsh-prompt-filter`.
 # Do not add a bare `dsh-prompt-filter` dependency alias: activation would
 # import that alias, then icon metadata would reject `icon.svg` because the
 # nearest package.json name would not match the import specifier.
 #
 # Install first (either command):
 #   dsh plugin --profile desktop add "E:/AI/Agents/Deepseek Harness/DSH/dsh-prompt-filter"
-#   dsh plugin --profile desktop add @deepseek-ai/dsh-prompt-filter
+#   dsh plugin --profile desktop add @lihongxu0221/dsh-prompt-filter
 #
 # Then restart DSH (or reload the plugin row). Enabling reapplies the shipped
-# patch, including `name: '@deepseek-ai/dsh-prompt-filter'`.
+# patch, including `name: '@lihongxu0221/dsh-prompt-filter'`.
 
 plugins:
   - id: dsh-prompt-filter
-    name: '@deepseek-ai/dsh-prompt-filter'
+    name: '@lihongxu0221/dsh-prompt-filter'
     config:
       sidebarEntry: true
       enabled: true

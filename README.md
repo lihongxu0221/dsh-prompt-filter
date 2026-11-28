@@ -67,12 +67,12 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 
 ### 方式 B：手动写进 profile
 
-不推荐手改 profile 的 `package.json` 或 `cordis.patch.yml`。如确需手动，把该目录以依赖名 `@deepseek-ai/dsh-prompt-filter` 链进 profile。bundle 行的 `id` 保持 `dsh-prompt-filter`，`name` 必须是 `@deepseek-ai/dsh-prompt-filter`（与 `package.json` 的 `name` 相同）。不要添加裸包名 `dsh-prompt-filter` 依赖别名：裸名能让导入解析，但图标元数据会拒绝 `icon.svg`，因为最近的 `package.json` 名称与导入说明符不一致。任何情况下都不要把本插件文件拷进 DSH 安装目录或 `node_modules`。
+不推荐手改 profile 的 `package.json` 或 `cordis.patch.yml`。如确需手动，把该目录以依赖名 `@lihongxu0221/dsh-prompt-filter` 链进 profile。bundle 行的 `id` 保持 `dsh-prompt-filter`，`name` 必须是 `@lihongxu0221/dsh-prompt-filter`（与 `package.json` 的 `name` 相同）。不要添加裸包名 `dsh-prompt-filter` 依赖别名：裸名能让导入解析，但图标元数据会拒绝 `icon.svg`，因为最近的 `package.json` 名称与导入说明符不一致。任何情况下都不要把本插件文件拷进 DSH 安装目录或 `node_modules`。
 
 ### 配置生效
 
-- 本插件的默认配置随 `cordis.patch.yml` 一起安装，可直接使用。随包行是 `id: dsh-prompt-filter`、`name: '@deepseek-ai/dsh-prompt-filter'`。
-- 重新启用插件会用这份随包补丁重写该行的 `name`。补丁里的模块名就是 `@deepseek-ai/dsh-prompt-filter`，启用后会保持这个作用域名，不会再写回裸包名。
+- 本插件的默认配置随 `cordis.patch.yml` 一起安装，可直接使用。随包行是 `id: dsh-prompt-filter`、`name: '@lihongxu0221/dsh-prompt-filter'`。
+- 重新启用插件会用这份随包补丁重写该行的 `name`。补丁里的模块名就是 `@lihongxu0221/dsh-prompt-filter`，启用后会保持这个作用域名，不会再写回裸包名。
 - 修改 profile 的 `cordis.patch.yml` 中 id 为 `dsh-prompt-filter` 的行即可覆盖配置；**同 id 的行会整体替换 bundle 配置**，请复制完整对象再改（见 `examples/cordis.patch.yml`）。覆盖时不要把 `name` 写成 `dsh-prompt-filter`。
 - 从 0.3.3 起，profile 里保存的旧规则会自动补上后来新增的字段（`nameMap`、`skillToolName`、`scope.skillCatalog`）：缺失才补，显式写出的值永远优先（包括用 `nameMap: {}` 明确关闭改名）。这样升级插件后无需重置 profile 也能用上新默认值。
 - 配置在插件加载时编译校验；改完配置重启 DSH 生效（至少重启后生效）。非法配置不会让 DSH 崩溃：插件打印 `invalid config, plugin left inactive` 并保持不注册监听器。
@@ -82,7 +82,7 @@ plugin_manager install_bundle → target = "E:\AI\Agents\Deepseek Harness\DSH\ds
 ## 4. 配置参考
 
 ```yaml
-# 随包行的 name 是 @deepseek-ai/dsh-prompt-filter；这里只按 id 覆盖 config。
+# 随包行的 name 是 @lihongxu0221/dsh-prompt-filter；这里只按 id 覆盖 config。
 - id: dsh-prompt-filter
   config:
     sidebarEntry: true       # 在左侧栏显示入口；false 时不注册侧栏图标，仍可用 /prompt-filter、插件页、设置页打开
@@ -325,7 +325,7 @@ node scripts/audit-trace.mjs "$DSH_HOME/dsh-prompt-filter/trace/<file>.json"
 ## 10. 卸载
 
 ```
-plugin_manager remove_bundle → target = dsh-prompt-filter
+plugin_manager remove_bundle → target = @lihongxu0221/dsh-prompt-filter
 ```
 
 或 GUI 插件列表里移除；随后重启。卸载不影响 DSH 本身，因为插件没有改动任何 DSH 文件。
@@ -336,7 +336,7 @@ plugin_manager remove_bundle → target = dsh-prompt-filter
 
 ```
 dsh-prompt-filter/
-├─ package.json            # 包名 @deepseek-ai/dsh-prompt-filter；dsh.bundle.patch 指向 cordis.patch.yml
+├─ package.json            # 包名 @lihongxu0221/dsh-prompt-filter；dsh.bundle.patch 指向 cordis.patch.yml
 ├─ cordis.patch.yml        # 默认插件行 + 完整默认规则
 ├─ index.js                # apply()：Config schema、编译缓存、volatile 重建、两个监听器
 ├─ client.js               # 浏览器端：侧栏入口/面板、插件页与设置页配置卡、/prompt-filter
@@ -382,15 +382,15 @@ MIT License，见 [LICENSE](./LICENSE)。插件无运行时第三方依赖（`@d
 | 方式 | 命令 |
 | --- | --- |
 | 本地目录链接（开发） | `dsh plugin --profile desktop add "E:/AI/Agents/Deepseek Harness/DSH/dsh-prompt-filter"` |
-| npm 预构建包 | `dsh plugin --profile desktop add @deepseek-ai/dsh-prompt-filter` |
-| 指定 Git 提交 | 见下方 PowerShell。依赖名与 bundle `name` 都是 `@deepseek-ai/dsh-prompt-filter` |
+| npm 预构建包 | `dsh plugin --profile desktop add @lihongxu0221/dsh-prompt-filter` |
+| 指定 Git 提交 | 见下方 PowerShell。依赖名与 bundle `name` 都是 `@lihongxu0221/dsh-prompt-filter` |
 | Release tarball | 从 GitHub Release 下载 `dsh-prompt-filter.tgz`，再 `dsh plugin --profile desktop add ./dsh-prompt-filter.tgz` |
 
-在 Windows profile 目录安装某个修复提交时，只保留作用域依赖。本地 pnpm store 为 `E:\.pnpm-store`。把 `<commit>` 换成要安装的完整提交哈希，然后重新启用插件，让随包补丁写回 `name: '@deepseek-ai/dsh-prompt-filter'`（`id` 仍是 `dsh-prompt-filter`）。若 profile 自己的 patch 把该行 `name` 写成了裸包名，改回作用域名。
+在 Windows profile 目录安装某个修复提交时，只保留作用域依赖。本地 pnpm store 为 `E:\.pnpm-store`。把 `<commit>` 换成要安装的完整提交哈希，然后重新启用插件，让随包补丁写回 `name: '@lihongxu0221/dsh-prompt-filter'`（`id` 仍是 `dsh-prompt-filter`）。若 profile 自己的 patch 把该行 `name` 写成了旧包名或裸包名，改回当前作用域名（如果曾安装过旧名 `@deepseek-ai/dsh-prompt-filter`，也先用 `pnpm remove @deepseek-ai/dsh-prompt-filter` 移除）。
 
 ```powershell
 pnpm remove dsh-prompt-filter
-pnpm add @deepseek-ai/dsh-prompt-filter@github:lihongxu0221/dsh-prompt-filter#<commit> --store-dir E:\.pnpm-store
+pnpm add @lihongxu0221/dsh-prompt-filter@github:lihongxu0221/dsh-prompt-filter#<commit> --store-dir E:\.pnpm-store
 ```
 
 ### 13.2 自动发版（GitHub Actions）

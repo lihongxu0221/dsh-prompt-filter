@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url'
  */
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
-const PACKAGE_NAME = '@deepseek-ai/dsh-prompt-filter'
+const PACKAGE_NAME = '@lihongxu0221/dsh-prompt-filter'
 const ROW_ID = 'dsh-prompt-filter'
 const MAX_ICON_BYTES = 256 * 1024
 
@@ -126,7 +126,7 @@ test('the shipped bundle registers the scoped package name and keeps the row id'
   const index = readFileSync(join(root, 'index.js'), 'utf8')
   const client = readFileSync(join(root, 'client.js'), 'utf8')
   assert.match(index, /export const name = 'dsh-prompt-filter'/)
-  assert.match(client, /id: '@deepseek-ai\/dsh-prompt-filter'/)
+  assert.match(client, /id: '@lihongxu0221\/dsh-prompt-filter'/)
 })
 
 test('install examples name the scoped package and do not add a bare alias', () => {
@@ -134,18 +134,18 @@ test('install examples name the scoped package and do not add a bare alias', () 
   const profile = readFileSync(join(root, 'examples/profile.yml'), 'utf8')
   const override = readFileSync(join(root, 'examples/cordis.patch.yml'), 'utf8')
 
-  assert.match(readme, /dsh plugin --profile desktop add @deepseek-ai\/dsh-prompt-filter/)
+  assert.match(readme, /dsh plugin --profile desktop add @lihongxu0221\/dsh-prompt-filter/)
   assert.match(readme, /pnpm remove dsh-prompt-filter/)
-  assert.match(readme, /pnpm add @deepseek-ai\/dsh-prompt-filter@github:lihongxu0221\/dsh-prompt-filter#<commit>/)
+  assert.match(readme, /pnpm add @lihongxu0221\/dsh-prompt-filter@github:lihongxu0221\/dsh-prompt-filter#<commit>/)
   assert.doesNotMatch(readme, /dsh plugin --profile desktop add dsh-prompt-filter\b/)
   assert.match(readme, /不要添加裸包名 `dsh-prompt-filter` 依赖别名/)
 
-  assert.match(profile, /name: '@deepseek-ai\/dsh-prompt-filter'/)
-  assert.match(profile, /dsh plugin --profile desktop add @deepseek-ai\/dsh-prompt-filter/)
+  assert.match(profile, /name: '@lihongxu0221\/dsh-prompt-filter'/)
+  assert.match(profile, /dsh plugin --profile desktop add @lihongxu0221\/dsh-prompt-filter/)
   assert.doesNotMatch(profile, /dsh plugin --profile desktop add dsh-prompt-filter\b/)
   assert.match(profile, /id: dsh-prompt-filter/)
 
-  assert.match(override, /name: '@deepseek-ai\/dsh-prompt-filter'/)
+  assert.match(override, /name: '@lihongxu0221\/dsh-prompt-filter'/)
   assert.doesNotMatch(override, /^\s*name:/m)
   assert.match(override, /^- id: dsh-prompt-filter$/m)
 })
